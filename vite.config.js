@@ -4,8 +4,8 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  base: '/StreamHub/',
   server: {
-    allowedHosts: true,
-    base: '/StreamHub/'
+    allowedHosts: true
   }
 })
