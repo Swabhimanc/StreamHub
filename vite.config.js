@@ -6,6 +6,6 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     allowedHosts: true,
-    base: 'StreamHub/'
+    base: '/StreamHub/'
   }
 })
