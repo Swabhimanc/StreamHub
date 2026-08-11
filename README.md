@@ -86,6 +86,7 @@ Provider embeds are normalized in `src/data/providers.js`:
 |---|---|---|
 | **VidCore** (default) | `vidcore.net/movie/{tmdbId}` | `vidcore.net/tv/{tmdbId}/{s}/{e}` |
 | **VidFast** | `vidfast.vc/movie/{tmdbId}` | `vidfast.vc/tv/{tmdbId}/{s}/{e}` |
+| **VidRock** | `vidrock.net/movie/{tmdbId}` | `vidrock.net/tv/{tmdbId}/{s}/{e}` |
 
 Adding a provider is one entry in the `PROVIDERS` array — the dropdown, persistence and embed rebuild pick it up automatically.
 

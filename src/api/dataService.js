@@ -9,10 +9,10 @@ import {
   mockRow,
 } from '../data/mock.js'
 
-export const isLive = hasApiKey
+export const isLive = () => hasApiKey()
 
 export async function getTrending(mediaType) {
-  if (!hasApiKey) return mediaType ? getMockMedia().filter((m) => m.mediaType === mediaType) : getMockMedia()
+  if (!hasApiKey()) return mediaType ? getMockMedia().filter((m) => m.mediaType === mediaType) : getMockMedia()
   const raw = await api.list(mediaType ? `/trending/${mediaType}/week` : requests.trending)
   return uniqueByKey(raw.map((r) => normalizeMedia(r, mediaType)))
 }
@@ -29,7 +29,7 @@ export const ROW_SOURCES = [
 
 export async function getRow({ label, path, fetch: customFetch }) {
   if (customFetch) return customFetch()
-  if (!hasApiKey) return mockRow(label)
+  if (!hasApiKey()) return mockRow(label)
   const raw = await api.list(path)
   return raw.map((r) => normalizeMedia(r, path.includes('/tv') ? 'tv' : 'movie'))
 }
@@ -49,12 +49,12 @@ export const SERIES_ROW_SOURCES = [
 ]
 
 export async function getGenres() {
-  if (!hasApiKey) return mockGenres()
+  if (!hasApiKey()) return mockGenres()
   return api.genres()
 }
 
 export async function getDiscoverByGenre(genreId, page = 1) {
-  if (!hasApiKey) return getMockMedia().slice(0, 12)
+  if (!hasApiKey()) return getMockMedia().slice(0, 12)
   const raw = await api.list(requests.discover, {
     with_genres: genreId,
     sort_by: 'popularity.desc',
@@ -65,7 +65,7 @@ export async function getDiscoverByGenre(genreId, page = 1) {
 }
 
 export async function getGenreTitles(genreId, page = 1) {
-  if (!hasApiKey) return getMockMedia().slice(0, 12)
+  if (!hasApiKey()) return getMockMedia().slice(0, 12)
   const [movies, shows] = await Promise.all([
     api.list(requests.discover, {
       with_genres: genreId,
@@ -83,7 +83,7 @@ export async function getGenreTitles(genreId, page = 1) {
 }
 
 export async function searchMedia(query, page = 1) {
-  if (!hasApiKey) return mockSearch(query)
+  if (!hasApiKey()) return mockSearch(query)
   const [movies, shows] = await Promise.all([
     api.list(requests.searchMovie, { query, page, include_adult: false }),
     api.list(requests.searchTv, { query, page, include_adult: false }),
@@ -93,18 +93,62 @@ export async function searchMedia(query, page = 1) {
 }
 
 export async function getVideo(mediaType, id) {
-  if (!hasApiKey) return mockVideos()
+  if (!hasApiKey()) return mockVideos()
   return api.videos(mediaType, id)
 }
 
 export async function getDetails(mediaType, id) {
-  if (!hasApiKey) return getMockMedia().find((m) => String(m.id) === String(id)) || null
+  if (!hasApiKey()) return getMockMedia().find((m) => String(m.id) === String(id)) || null
   const raw = await api.detail(mediaType, id)
   return normalizeMedia(raw, mediaType)
 }
 
+export async function getBackdrops(mediaType, id, limit = 5) {
+  if (!hasApiKey()) return []
+  const images = await api.images(mediaType, id).catch(() => ({ backdrops: [] }))
+  return (images.backdrops || [])
+    .filter((image) => image.file_path)
+    .sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0))
+    .slice(0, limit)
+    .map((image) => image.file_path)
+}
+
+export async function getRelated(mediaType, id, limit = 12) {
+  if (!hasApiKey()) {
+    const current = getMockMedia().find((media) => String(media.id) === String(id))
+    return getMockMedia()
+      .filter((media) => media.key !== current?.key)
+      .sort((a, b) => {
+        const aMatches = a.genreIds.filter((genre) => current?.genreIds.includes(genre)).length
+        const bMatches = b.genreIds.filter((genre) => current?.genreIds.includes(genre)).length
+        return bMatches - aMatches || b.popularity - a.popularity
+      })
+      .slice(0, limit)
+  }
+
+  let raw = await api.list(`/${mediaType}/${id}/recommendations`)
+  if (!raw.length) raw = await api.list(`/${mediaType}/${id}/similar`)
+  return raw.slice(0, limit).map((item) => normalizeMedia(item, mediaType))
+}
+
+export async function getSeasonEpisodes(id, seasonNumber) {
+  if (!hasApiKey()) return []
+
+  const season = await api.season(id, seasonNumber)
+  return (season.episodes || []).map((episode) => ({
+    id: episode.id,
+    number: episode.episode_number,
+    season: episode.season_number,
+    title: episode.name || `Episode ${episode.episode_number}`,
+    overview: episode.overview || '',
+    still: episode.still_path || null,
+    airDate: episode.air_date || '',
+    runtime: episode.runtime || null,
+  }))
+}
+
 export async function getCast(mediaType, id, limit = 20) {
-  if (!hasApiKey) return []
+  if (!hasApiKey()) return []
   const credits = await api.credits(mediaType, id).catch(() => ({ cast: [] }))
   return (credits.cast || [])
     .slice(0, limit)

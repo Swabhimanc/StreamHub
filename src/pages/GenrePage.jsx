@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 import { useData } from '../hooks/useData.js'
 import { getGenreTitles } from '../api/dataService.js'
+import { useApiKey } from '../context/ApiKeyContext.jsx'
 import { GENRES } from '../components/Navbar.jsx'
 import MediaGrid from '../components/MediaGrid.jsx'
 
@@ -24,7 +25,8 @@ export default function GenrePage() {
 }
 
 function GenreGrid({ genreId }) {
-  const state = useData(() => getGenreTitles(genreId), [genreId])
+  const { apiKey } = useApiKey()
+  const state = useData(() => getGenreTitles(genreId), [genreId, apiKey])
   return (
     <MediaGrid
       items={state.data}

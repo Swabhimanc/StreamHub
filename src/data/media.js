@@ -19,6 +19,8 @@ export function normalizeMedia(item, forcedType) {
     year: date ? String(date).slice(0, 4) : '',
     genreIds: item.genre_ids || [],
     popularity: item.popularity ?? 0,
+    genres: Array.isArray(item.genres) ? item.genres.map((genre) => genre.name) : [],
+    runtime: item.runtime ?? (Array.isArray(item.episode_run_time) ? item.episode_run_time[0] : null),
     seasons: Array.isArray(item.seasons) ? item.seasons : null,
     numberOfEpisodes: item.number_of_episodes ?? null,
   }

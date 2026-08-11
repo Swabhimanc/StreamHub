@@ -11,6 +11,12 @@ export const PROVIDERS = [
     movie: (id) => `https://vidfast.vc/movie/${id}`,
     tv: (id, season, episode) => `https://vidfast.vc/tv/${id}/${season}/${episode}`,
   },
+  {
+    id: 'vidrock',
+    name: 'VidRock',
+    movie: (id) => `https://vidrock.net/movie/${id}`,
+    tv: (id, season, episode) => `https://vidrock.net/tv/${id}/${season}/${episode}`,
+  },
 ]
 
 export const DEFAULT_PROVIDER = 'vidcore'

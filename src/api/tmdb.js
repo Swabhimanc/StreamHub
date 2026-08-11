@@ -1,8 +1,13 @@
 import { API_BASE, IMG_BASE, requests } from '../data/requests.js'
 
-export const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY || ''
+let tmdbApiKey = import.meta.env.VITE_TMDB_API_KEY || ''
 
-export const hasApiKey = Boolean(TMDB_API_KEY)
+export const setTmdbApiKey = (value) => {
+  tmdbApiKey = String(value || '').trim()
+}
+
+export const getTmdbApiKey = () => tmdbApiKey
+export const hasApiKey = () => Boolean(tmdbApiKey)
 
 export const POSTER_PLACEHOLDER =
   'data:image/svg+xml;utf8,' +
@@ -16,13 +21,15 @@ export const originalBackdropUrl = (path) =>
   path ? `${IMG_BASE}/original${path}` : null
 export const posterUrl = (path, size = 'w500') =>
   path ? `${IMG_BASE}/${size}${path}` : POSTER_PLACEHOLDER
+export const stillUrl = (path, size = 'w500') =>
+  path ? `${IMG_BASE}/${size}${path}` : null
 
 export const videosPath = (mediaType, id) =>
   `${mediaType === 'tv' ? '/tv' : '/movie'}/${id}/videos`
 
 async function request(path, params = {}) {
   const url = new URL(`${API_BASE}${path}`)
-  url.searchParams.set('api_key', TMDB_API_KEY)
+  url.searchParams.set('api_key', tmdbApiKey)
   url.searchParams.set('language', 'en-US')
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== '') {
@@ -36,6 +43,16 @@ async function request(path, params = {}) {
   return res.json()
 }
 
+export async function validateTmdbApiKey(value) {
+  const key = String(value || '').trim()
+  if (!key) return false
+
+  const url = new URL(`${API_BASE}/configuration`)
+  url.searchParams.set('api_key', key)
+  const res = await fetch(url)
+  return res.ok
+}
+
 export const api = {
   list: (path, params) => request(path, params).then((r) => r.results || []),
   genres: () =>
@@ -47,6 +64,8 @@ export const api = {
       }
     ),
   detail: (mediaType, id) => request(`${mediaType === 'tv' ? '/tv' : '/movie'}/${id}`),
+  images: (mediaType, id) => request(`${mediaType === 'tv' ? '/tv' : '/movie'}/${id}/images`, { include_image_language: 'en,null' }),
+  season: (id, seasonNumber) => request(`/tv/${id}/season/${seasonNumber}`),
   credits: (mediaType, id) => request(`${mediaType === 'tv' ? '/tv' : '/movie'}/${id}/credits`),
   videos: async (mediaType, id) => {
     const data = await request(videosPath(mediaType, id))

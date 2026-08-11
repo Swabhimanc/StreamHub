@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { ApiKeyProvider } from './context/ApiKeyContext.jsx'
 import { MyListProvider } from './context/MyListContext.jsx'
 import { PlayerProvider } from './context/PlayerContext.jsx'
+import { PreferencesProvider } from './context/PreferencesContext.jsx'
 import { ProviderProvider } from './context/ProviderContext.jsx'
 import Navbar from './components/Navbar.jsx'
 import Footer from './components/Footer.jsx'
@@ -13,34 +15,40 @@ import GenrePage from './pages/GenrePage.jsx'
 import MoviesPage from './pages/MoviesPage.jsx'
 import SeriesPage from './pages/SeriesPage.jsx'
 import WatchPage from './pages/WatchPage.jsx'
+import SettingsPage from './pages/SettingsPage.jsx'
 
 export default function App() {
   return (
     <BrowserRouter>
-      <MyListProvider>
-        <ProviderProvider>
-        <PlayerProvider>
-          <ScrollToTop />
-          <div className="flex min-h-screen flex-col bg-ink">
-            <Navbar />
-            <main className="flex-1">
-              <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/search" element={<SearchPage />} />
-                <Route path="/movies" element={<MoviesPage />} />
-                <Route path="/series" element={<SeriesPage />} />
-                <Route path="/watch/:type/:id" element={<WatchPage />} />
-                <Route path="/mylist" element={<MyListPage />} />
-                <Route path="/genre/:id" element={<GenrePage />} />
-                <Route path="*" element={<HomePage />} />
-              </Routes>
-            </main>
-            <Footer />
-            <VideoModal />
-          </div>
-        </PlayerProvider>
-        </ProviderProvider>
-      </MyListProvider>
+      <ApiKeyProvider>
+        <MyListProvider>
+          <ProviderProvider>
+          <PlayerProvider>
+            <PreferencesProvider>
+              <ScrollToTop />
+              <div className="flex min-h-screen flex-col bg-ink">
+                <Navbar />
+                <main className="flex-1">
+                  <Routes>
+                    <Route path="/" element={<HomePage />} />
+                    <Route path="/search" element={<SearchPage />} />
+                    <Route path="/movies" element={<MoviesPage />} />
+                    <Route path="/series" element={<SeriesPage />} />
+                    <Route path="/watch/:type/:id" element={<WatchPage />} />
+                    <Route path="/mylist" element={<MyListPage />} />
+                    <Route path="/settings" element={<SettingsPage />} />
+                    <Route path="/genre/:id" element={<GenrePage />} />
+                    <Route path="*" element={<HomePage />} />
+                  </Routes>
+                </main>
+                <Footer />
+                <VideoModal />
+              </div>
+            </PreferencesProvider>
+          </PlayerProvider>
+          </ProviderProvider>
+        </MyListProvider>
+      </ApiKeyProvider>
     </BrowserRouter>
   )
 }

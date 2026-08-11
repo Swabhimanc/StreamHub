@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useData } from '../hooks/useData.js'
 import { searchMedia } from '../api/dataService.js'
+import { useApiKey } from '../context/ApiKeyContext.jsx'
 import MediaGrid from '../components/MediaGrid.jsx'
 import { SearchIcon, CloseIcon } from '../components/icons.jsx'
 
@@ -15,6 +16,7 @@ const SUGGESTIONS = [
 ]
 
 export default function SearchPage() {
+  const { apiKey } = useApiKey()
   const [searchParams, setSearchParams] = useSearchParams()
   const query = searchParams.get('q') || ''
   const [input, setInput] = useState(query)
@@ -29,7 +31,7 @@ export default function SearchPage() {
     return () => clearTimeout(t)
   }, [input, setSearchParams])
 
-  const results = useData(() => (debounced ? searchMedia(debounced) : Promise.resolve([])), [debounced])
+  const results = useData(() => (debounced ? searchMedia(debounced) : Promise.resolve([])), [debounced, apiKey])
 
   return (
     <div className="mx-auto max-w-screen-2xl px-4 pb-16 pt-24 sm:px-6 lg:px-10">
