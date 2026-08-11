@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useApiKey } from '../context/ApiKeyContext.jsx'
-import { usePreferences } from '../context/PreferencesContext.jsx'
 import { useMyList } from '../context/MyListContext.jsx'
 import { validateTmdbApiKey } from '../api/tmdb.js'
 import { SpinnerIcon } from '../components/icons.jsx'
@@ -8,7 +7,6 @@ import MovieCard from '../components/MovieCard.jsx'
 
 export default function SettingsPage() {
   const { apiKey, updateApiKey, hasApiKey } = useApiKey()
-  const { trailerDefault, setPreference } = usePreferences()
   const { items } = useMyList()
   const [draft, setDraft] = useState(apiKey)
   const [showKey, setShowKey] = useState(false)
@@ -129,34 +127,6 @@ export default function SettingsPage() {
               Remove
             </button>
           )}
-        </div>
-      </div>
-
-      {/* Preferences Card */}
-      <div className="mt-6 rounded-2xl border border-white/12 bg-surface p-4 sm:p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-extrabold text-white">Player</h2>
-            <p className="mt-0.5 text-xs text-mist">Customize your watch experience</p>
-          </div>
-        </div>
-
-        <div className="mt-4 flex items-center justify-between">
-          <div>
-            <p className="text-sm font-semibold text-white">Autoplay Trailer</p>
-            <p className="mt-0.5 text-xs text-mist">Show the trailer preview by default on the watch page</p>
-          </div>
-          <button
-            onClick={() => setPreference('trailerDefault', !trailerDefault)}
-            className={`relative h-7 w-12 rounded-full transition-colors ${trailerDefault ? 'bg-brand' : 'bg-surface-light'}`}
-            role="switch"
-            aria-checked={trailerDefault}
-            aria-label="Autoplay trailer"
-          >
-            <span
-              className={`absolute top-0.5 h-6 w-6 rounded-full bg-white transition-transform ${trailerDefault ? 'translate-x-5' : 'translate-x-0.5'}`}
-            />
-          </button>
         </div>
       </div>
 

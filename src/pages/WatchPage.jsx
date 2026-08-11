@@ -12,7 +12,6 @@ import { originalBackdropUrl, posterUrl, stillUrl } from '../api/tmdb.js'
 import { useData } from '../hooks/useData.js'
 import { useProvider } from '../context/ProviderContext.jsx'
 import { useApiKey } from '../context/ApiKeyContext.jsx'
-import { usePreferences } from '../context/PreferencesContext.jsx'
 import { useMyList } from '../context/MyListContext.jsx'
 import { PROVIDERS } from '../data/providers.js'
 import MovieCard from '../components/MovieCard.jsx'
@@ -31,11 +30,9 @@ export default function WatchPage() {
   const mediaType = type === 'tv' ? 'tv' : 'movie'
   const { providerId, setProvider } = useProvider()
   const { apiKey } = useApiKey()
-  const { trailerDefault } = usePreferences()
   const { has, toggle } = useMyList()
   const [season, setSeason] = useState(1)
   const [episode, setEpisode] = useState(1)
-  const [previewEnabled, setPreviewEnabled] = useState(trailerDefault)
   const [playbackMode, setPlaybackMode] = useState(null)
 
   const { data: media, loading } = useData(
@@ -66,9 +63,8 @@ export default function WatchPage() {
   useEffect(() => {
     setSeason(1)
     setEpisode(1)
-    setPreviewEnabled(trailerDefault)
     setPlaybackMode(null)
-  }, [id, mediaType, trailerDefault])
+  }, [id, mediaType])
 
   const seasons = Array.isArray(media?.seasons)
     ? media.seasons.filter((item) => item.season_number > 0)
@@ -114,8 +110,6 @@ export default function WatchPage() {
       <BackgroundGallery
         media={media}
         backdropPaths={backdropPaths || []}
-        previewEnabled={previewEnabled && Boolean(trailerUrl)}
-        trailerUrl={trailerUrl}
       />
 
       <div className="relative z-10 w-full px-4 sm:px-6 lg:px-10">
@@ -184,14 +178,6 @@ export default function WatchPage() {
               >
                 {inList ? <CheckIcon className="h-5 w-5" /> : <PlusIcon className="h-5 w-5" />}
               </button>
-              {trailerUrl && (
-                <button
-                  onClick={() => setPreviewEnabled((value) => !value)}
-                  className="text-xs font-bold text-cream/65 transition hover:text-white"
-                >
-                  {previewEnabled ? 'Use poster background' : 'Use live trailer preview'}
-                </button>
-              )}
             </div>
 
             {trailerLoading && (
@@ -230,7 +216,7 @@ export default function WatchPage() {
   )
 }
 
-function BackgroundGallery({ media, backdropPaths, previewEnabled, trailerUrl }) {
+function BackgroundGallery({ media, backdropPaths }) {
   const images = useMemo(() => {
     const paths = [media.backdrop, ...backdropPaths].filter(Boolean)
     if (!paths.length && media.poster) paths.push(media.poster)
@@ -243,33 +229,23 @@ function BackgroundGallery({ media, backdropPaths, previewEnabled, trailerUrl })
   }, [media.key])
 
   useEffect(() => {
-    if (previewEnabled || images.length <= 1) return
+    if (images.length <= 1) return
     const timer = window.setInterval(() => {
       setActiveIndex((index) => (index + 1) % images.length)
     }, 6000)
     return () => window.clearInterval(timer)
-  }, [images.length, previewEnabled])
+  }, [images.length])
 
   return (
-    <div className="fixed inset-0 top-16">
-      {previewEnabled ? (
-        <iframe
-          src={toPreviewUrl(trailerUrl)}
-          title={`${media.title} trailer preview`}
-          className="pointer-events-none h-full w-full scale-[1.03] border-0"
-          allow="autoplay; encrypted-media"
-          tabIndex={-1}
+    <div className="fixed inset-0 overflow-hidden">
+      {images.map((image, index) => (
+        <img
+          key={image}
+          src={image}
+          alt=""
+          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${index === activeIndex ? 'opacity-100' : 'opacity-0'}`}
         />
-      ) : (
-        images.map((image, index) => (
-          <img
-            key={image}
-            src={image}
-            alt=""
-            className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${index === activeIndex ? 'opacity-100' : 'opacity-0'}`}
-          />
-        ))
-      )}
+      ))}
       <div className="absolute inset-0 bg-gradient-to-r from-black via-black/45 to-black/15" />
       <div className="absolute inset-0 bg-gradient-to-t from-ink via-transparent to-black/25" />
     </div>
@@ -571,12 +547,6 @@ function PageMessage({ children }) {
 function formatDuration(runtime) {
   if (!runtime) return null
   return `${runtime >= 60 ? `${Math.floor(runtime / 60)}h ` : ''}${runtime % 60}m`
-}
-
-function toPreviewUrl(url) {
-  if (!url) return ''
-  const separator = url.includes('?') ? '&' : '?'
-  return `${url}${separator}autoplay=1&mute=1&controls=0&loop=1&modestbranding=1`
 }
 
 function initials(name) {
