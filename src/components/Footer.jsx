@@ -27,7 +27,6 @@ export default function Footer() {
             <li><Link to="/" className="transition hover:text-white">Home</Link></li>
             <li><Link to="/mylist" className="transition hover:text-white">My List</Link></li>
             <li><Link to="/search" className="transition hover:text-white">Search</Link></li>
-            <li><Link to="/settings" className="transition hover:text-white">Settings</Link></li>
           </ul>
         </div>
 

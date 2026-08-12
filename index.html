@@ -9,6 +9,17 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      ;(function (location) {
+        if (!location.search.startsWith('?/')) return
+        const decoded = location.search
+          .slice(2)
+          .split('&')
+          .map((part) => part.replace(/~and~/g, '&'))
+          .join('?')
+        window.history.replaceState(null, '', location.pathname.replace(/\/$/, '') + '/' + decoded + location.hash)
+      })(window.location)
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

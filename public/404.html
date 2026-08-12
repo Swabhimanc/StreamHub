@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StreamBox</title>
+    <script>
+      ;(function (location) {
+        const pathSegmentsToKeep = 1
+        const path = location.pathname
+          .split('/')
+          .slice(1 + pathSegmentsToKeep)
+          .join('/')
+          .replace(/&/g, '~and~')
+        const query = location.search ? '&' + location.search.slice(1).replace(/&/g, '~and~') : ''
+        const base = location.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/')
+        location.replace(location.origin + base + '/?/' + path + query + location.hash)
+      })(window.location)
+    </script>
+  </head>
+  <body></body>
+</html>

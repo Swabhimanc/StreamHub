@@ -8,7 +8,6 @@ const navLinks = [
   { to: '/movies', label: 'Movies' },
   { to: '/series', label: 'Series' },
   { to: '/mylist', label: 'My List' },
-  { to: '/settings', label: 'Settings' },
 ]
 
 export default function Navbar() {
