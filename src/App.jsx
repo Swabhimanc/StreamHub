@@ -28,15 +28,15 @@ export default function App() {
               <Navbar />
               <main className="flex-1">
                 <Routes>
-                  <Route path="/StreamHub" element={<HomePage />} />
-                  <Route path="/StreamHub/search" element={<SearchPage />} />
-                  <Route path="/StreamHub/movies" element={<MoviesPage />} />
-                  <Route path="/StreamHub/series" element={<SeriesPage />} />
-                  <Route path="/StreamHub/watch/:type/:id" element={<WatchPage />} />
-                  <Route path="/StreamHub/mylist" element={<MyListPage />} />
-                  <Route path="/StreamHub/settings" element={<SettingsPage />} />
-                  <Route path="/StreamHub/genre/:id" element={<GenrePage />} />
-                  <Route path="/StreamHub/*" element={<HomePage />} />
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/search" element={<SearchPage />} />
+                  <Route path="/movies" element={<MoviesPage />} />
+                  <Route path="/series" element={<SeriesPage />} />
+                  <Route path="/watch/:type/:id" element={<WatchPage />} />
+                  <Route path="/mylist" element={<MyListPage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/genre/:id" element={<GenrePage />} />
+                  <Route path="*" element={<HomePage />} />
                 </Routes>
               </main>
               <Footer />
