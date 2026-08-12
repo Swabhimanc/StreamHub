@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo } from 'react'
+import { createContext, useCallback, useContext, useMemo } from 'react'
 import { useLocalStorage } from '../hooks/useLocalStorage.js'
 import { getTmdbApiKey, setTmdbApiKey } from '../api/tmdb.js'
 
@@ -8,12 +8,14 @@ const STORAGE_KEY = 'streambox.tmdb-api-key'
 export function ApiKeyProvider({ children }) {
   const [apiKey, setApiKey] = useLocalStorage(STORAGE_KEY, getTmdbApiKey())
 
-  useEffect(() => {
-    setTmdbApiKey(apiKey)
-  }, [apiKey])
+  // Child data effects can run on the first mount, so sync the request module
+  // before rendering them rather than waiting for a provider effect.
+  setTmdbApiKey(apiKey)
 
   const updateApiKey = useCallback((value) => {
-    setApiKey(String(value || '').trim())
+    const nextKey = String(value || '').trim()
+    setTmdbApiKey(nextKey)
+    setApiKey(nextKey)
   }, [setApiKey])
 
   const value = useMemo(
