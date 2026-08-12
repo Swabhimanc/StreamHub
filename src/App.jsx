@@ -18,7 +18,7 @@ import SettingsPage from './pages/SettingsPage.jsx'
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <ApiKeyProvider>
         <MyListProvider>
           <ProviderProvider>
