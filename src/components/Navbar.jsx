@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { useMyList } from '../context/MyListContext.jsx'
+import { useHistory } from '../context/HistoryContext.jsx'
 import { SearchIcon, CloseIcon } from './icons.jsx'
 
 const navLinks = [
@@ -8,12 +9,14 @@ const navLinks = [
   { to: '/movies', label: 'Movies' },
   { to: '/series', label: 'Series' },
   { to: '/mylist', label: 'My List' },
+  { to: '/history', label: 'History' },
 ]
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const { items } = useMyList()
+  const { items: historyItems } = useHistory()
   const location = useLocation()
 
   useEffect(() => {
@@ -64,6 +67,11 @@ export default function Navbar() {
               {l.to === '/mylist' && items.length > 0 && (
                 <span className="ml-1 rounded bg-brand px-1.5 py-0.5 text-[10px] font-bold text-white">
                   {items.length}
+                </span>
+              )}
+              {l.to === '/history' && historyItems.length > 0 && (
+                <span className="ml-1 rounded bg-white/20 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                  {historyItems.length}
                 </span>
               )}
             </NavLink>
@@ -122,6 +130,11 @@ export default function Navbar() {
               {l.to === '/mylist' && items.length > 0 && (
                 <span className="rounded bg-brand px-2 py-0.5 text-xs font-bold text-white">
                   {items.length}
+                </span>
+              )}
+              {l.to === '/history' && historyItems.length > 0 && (
+                <span className="rounded bg-white/20 px-2 py-0.5 text-xs font-bold text-white">
+                  {historyItems.length}
                 </span>
               )}
             </NavLink>

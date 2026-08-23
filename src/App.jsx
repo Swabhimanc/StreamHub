@@ -1,15 +1,19 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { ApiKeyProvider } from './context/ApiKeyContext.jsx'
 import { MyListProvider } from './context/MyListContext.jsx'
+import { HistoryProvider } from './context/HistoryContext.jsx'
+import { RatingsProvider } from './context/RatingsContext.jsx'
 import { PlayerProvider } from './context/PlayerContext.jsx'
 import { ProviderProvider } from './context/ProviderContext.jsx'
 import Navbar from './components/Navbar.jsx'
 import Footer from './components/Footer.jsx'
+import AdSlot from './components/AdSlot.jsx'
 import VideoModal from './components/VideoModal.jsx'
 import ScrollToTop from './components/ScrollToTop.jsx'
 import HomePage from './pages/HomePage.jsx'
 import SearchPage from './pages/SearchPage.jsx'
 import MyListPage from './pages/MyListPage.jsx'
+import HistoryPage from './pages/HistoryPage.jsx'
 import GenrePage from './pages/GenrePage.jsx'
 import MoviesPage from './pages/MoviesPage.jsx'
 import SeriesPage from './pages/SeriesPage.jsx'
@@ -21,6 +25,8 @@ export default function App() {
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <ApiKeyProvider>
         <MyListProvider>
+          <HistoryProvider>
+          <RatingsProvider>
           <ProviderProvider>
           <PlayerProvider>
             <ScrollToTop />
@@ -34,16 +40,22 @@ export default function App() {
                   <Route path="/series" element={<SeriesPage />} />
                   <Route path="/watch/:type/:id" element={<WatchPage />} />
                   <Route path="/mylist" element={<MyListPage />} />
+                  <Route path="/history" element={<HistoryPage />} />
                   <Route path="/settings" element={<SettingsPage />} />
                   <Route path="/genre/:id" element={<GenrePage />} />
                   <Route path="*" element={<HomePage />} />
                 </Routes>
               </main>
+              <div className="mx-auto w-full max-w-screen-2xl px-4 pb-8 sm:px-6 lg:px-10">
+                <AdSlot slot="5952064162" />
+              </div>
               <Footer />
               <VideoModal />
             </div>
           </PlayerProvider>
           </ProviderProvider>
+          </RatingsProvider>
+          </HistoryProvider>
         </MyListProvider>
       </ApiKeyProvider>
     </BrowserRouter>

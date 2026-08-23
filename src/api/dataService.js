@@ -159,3 +159,27 @@ export async function getCast(mediaType, id, limit = 20) {
       profile: p.profile_path || null,
     }))
 }
+
+export async function getNewReleases(mediaType, limit = 20) {
+  if (!hasApiKey()) return getMockMedia().slice(0, limit)
+  const path = mediaType === 'tv' ? '/discover/tv' : requests.discover
+  const raw = await api.list(path, {
+    sort_by: 'primary_release_date.desc',
+    'primary_release_date.lte': new Date().toISOString().slice(0, 10),
+    page: 1,
+    include_adult: false,
+    ...(mediaType === 'tv' ? { 'first_air_date.lte': new Date().toISOString().slice(0, 10) } : {}),
+  })
+  return raw.slice(0, limit).map((r) => normalizeMedia(r, mediaType))
+}
+
+export async function getRecommendationsForHistory(historyItems, limit = 20) {
+  if (!historyItems?.length) return []
+  const recent = historyItems.find((h) => h.mediaType === 'tv') || historyItems.find((h) => h.mediaType === 'movie') || historyItems[0]
+  if (!recent) return []
+  try {
+    return await getRelated(recent.mediaType, recent.id, limit)
+  } catch {
+    return []
+  }
+}

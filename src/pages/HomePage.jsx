@@ -1,13 +1,19 @@
-import { useMemo } from 'react'
+import { Fragment, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { useData } from '../hooks/useData.js'
-import { getTrending, getRow, ROW_SOURCES } from '../api/dataService.js'
+import { getTrending, getRow, ROW_SOURCES, getRecommendationsForHistory } from '../api/dataService.js'
 import { useApiKey } from '../context/ApiKeyContext.jsx'
+import { useHistory } from '../context/HistoryContext.jsx'
 import FeaturedCarousel from '../components/FeaturedCarousel.jsx'
+import AdSlot from '../components/AdSlot.jsx'
 import Row from '../components/Row.jsx'
+import MovieCard from '../components/MovieCard.jsx'
 import { sortByPopularity } from '../data/media.js'
+import { HistoryIcon } from '../components/icons.jsx'
 
 export default function HomePage() {
   const { apiKey } = useApiKey()
+  const { items: historyItems } = useHistory()
   const trending = useData(getTrending, [apiKey])
   const featured = useMemo(
     () => (trending.data && trending.data.length ? sortByPopularity(trending.data).slice(0, 6) : []),
@@ -19,9 +25,24 @@ export default function HomePage() {
       <FeaturedCarousel items={featured} />
 
       <div className="relative z-10 mt-4 space-y-10">
-        {ROW_SOURCES.map((source) => (
-          <HomeRow key={source.label} source={source} />
+        {historyItems.length > 0 && (
+          <ContinueWatchingRow items={historyItems} />
+        )}
+
+        {ROW_SOURCES.map((source, index) => (
+          <Fragment key={source.label}>
+            {index === 3 && (
+              <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-10">
+                <AdSlot slot="6962873440" format="fluid" layoutKey="-6t+ed+2i-1n-4w" />
+              </div>
+            )}
+            <HomeRow source={source} />
+          </Fragment>
         ))}
+
+        {historyItems.length > 0 && (
+          <BecauseYouWatchedRow historyItems={historyItems} />
+        )}
       </div>
     </div>
   )
@@ -33,6 +54,59 @@ function HomeRow({ source }) {
   return (
     <Row
       title={source.label}
+      items={state.data}
+      loading={state.loading}
+      error={state.error}
+      onRetry={state.retry}
+    />
+  )
+}
+
+function ContinueWatchingRow({ items }) {
+  return (
+    <section className="relative -mx-1 px-4 sm:px-6 lg:px-10">
+      <div className="mb-3 flex items-center gap-2 pl-1">
+        <HistoryIcon className="h-5 w-5 text-brand" />
+        <h2 className="text-lg font-bold text-cream sm:text-xl">Continue Watching</h2>
+        <Link to="/history" className="ml-auto text-xs font-semibold text-mist transition hover:text-white">
+          View all
+        </Link>
+      </div>
+      <div className="no-scrollbar flex gap-3 overflow-x-auto scroll-smooth py-5">
+        {items.slice(0, 12).map((entry) => (
+          <HistoryCard key={entry.key} entry={entry} />
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function HistoryCard({ entry }) {
+  return (
+    <div className="w-[230px] shrink-0">
+      <MovieCard media={entry} getPath={watchPath} />
+    </div>
+  )
+}
+
+function watchPath(entry) {
+  if (entry.mediaType === 'tv' && entry.season) {
+    return `/watch/${entry.mediaType}/${entry.id}?s=${entry.season}&e=${entry.episode ?? 1}&autoplay=true`
+  }
+  return `/watch/${entry.mediaType}/${entry.id}?autoplay=true`
+}
+
+function BecauseYouWatchedRow({ historyItems }) {
+  const { apiKey } = useApiKey()
+  const recent = historyItems[0]
+  const state = useData(
+    () => getRecommendationsForHistory(historyItems),
+    [recent?.key, apiKey]
+  )
+  if (!state.data?.length && !state.loading) return null
+  return (
+    <Row
+      title={`Because you watched ${recent?.title || 'a title'}`}
       items={state.data}
       loading={state.loading}
       error={state.error}

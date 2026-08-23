@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import {
   getBackdrops,
   getCast,
@@ -13,6 +13,8 @@ import { useData } from '../hooks/useData.js'
 import { useProvider } from '../context/ProviderContext.jsx'
 import { useApiKey } from '../context/ApiKeyContext.jsx'
 import { useMyList } from '../context/MyListContext.jsx'
+import { useHistory } from '../context/HistoryContext.jsx'
+import { useRatings } from '../context/RatingsContext.jsx'
 import { PROVIDERS } from '../data/providers.js'
 import MovieCard from '../components/MovieCard.jsx'
 import PlayerEmbed from '../components/PlayerEmbed.jsx'
@@ -21,19 +23,30 @@ import {
   ChevronLeftIcon,
   PlayIcon,
   PlusIcon,
+  ShareIcon,
   SpinnerIcon,
   StarIcon,
+  StarOutlineIcon,
+  NextIcon,
+  FullscreenIcon,
 } from '../components/icons.jsx'
 
 export default function WatchPage() {
   const { type, id } = useParams()
+  const [searchParams] = useSearchParams()
   const mediaType = type === 'tv' ? 'tv' : 'movie'
   const { providerId, setProvider } = useProvider()
   const { apiKey } = useApiKey()
   const { has, toggle } = useMyList()
-  const [season, setSeason] = useState(1)
-  const [episode, setEpisode] = useState(1)
-  const [playbackMode, setPlaybackMode] = useState(null)
+  const { add: addHistory } = useHistory()
+  const { get: getRating, set: setRating } = useRatings()
+  const [shareLabel, setShareLabel] = useState(null)
+  const initialSeason = Number(searchParams.get('s')) || 1
+  const initialEpisode = Number(searchParams.get('e')) || 1
+  const autoPlay = searchParams.get('autoplay') === 'true' || searchParams.get('play') === '1'
+  const [season, setSeason] = useState(initialSeason)
+  const [episode, setEpisode] = useState(initialEpisode)
+  const [playbackMode, setPlaybackMode] = useState(autoPlay ? 'content' : null)
 
   const { data: media, loading } = useData(
     () => (id ? getDetails(mediaType, id).catch(() => null) : Promise.resolve(null)),
@@ -60,11 +73,22 @@ export default function WatchPage() {
     [mediaType, id, season, apiKey]
   )
 
+  const userRating = media ? getRating(media.key) : 0
+
   useEffect(() => {
-    setSeason(1)
-    setEpisode(1)
-    setPlaybackMode(null)
-  }, [id, mediaType])
+    setSeason(initialSeason)
+    setEpisode(initialEpisode)
+    setPlaybackMode(autoPlay ? 'content' : null)
+  }, [id, mediaType, initialSeason, initialEpisode, autoPlay])
+
+  useEffect(() => {
+    if (playbackMode === 'content' && media) {
+      addHistory(media, {
+        season: mediaType === 'tv' ? season : null,
+        episode: mediaType === 'tv' ? episode : null,
+      })
+    }
+  }, [playbackMode, media, mediaType, season, episode, addHistory])
 
   const seasons = Array.isArray(media?.seasons)
     ? media.seasons.filter((item) => item.season_number > 0)
@@ -73,7 +97,12 @@ export default function WatchPage() {
   const duration = formatDuration(media?.runtime)
 
   if (loading) {
-    return <PageMessage>Loading...</PageMessage>
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-ink">
+        <SpinnerIcon className="h-10 w-10 text-brand" />
+        <p className="text-sm font-semibold text-mist">Loading...</p>
+      </div>
+    )
   }
 
   if (!media) {
@@ -100,6 +129,10 @@ export default function WatchPage() {
           setEpisode(1)
         }}
         onEpisodeChange={setEpisode}
+        onPlayEpisode={(value) => {
+          setEpisode(value)
+          setPlaybackMode('content')
+        }}
         onClose={() => setPlaybackMode(null)}
       />
     )
@@ -178,7 +211,56 @@ export default function WatchPage() {
               >
                 {inList ? <CheckIcon className="h-5 w-5" /> : <PlusIcon className="h-5 w-5" />}
               </button>
+              <button
+                onClick={async () => {
+                  const shareUrl = window.location.href
+                  const shareData = {
+                    title: media.title,
+                    text: `Watch ${media.title} on StreamBox`,
+                    url: shareUrl,
+                  }
+                  try {
+                    if (navigator.share) {
+                      await navigator.share(shareData)
+                    } else {
+                      await navigator.clipboard.writeText(shareUrl)
+                      setShareLabel('Link copied!')
+                      setTimeout(() => setShareLabel(null), 2000)
+                    }
+                  } catch {
+                    // user cancelled or clipboard unavailable
+                  }
+                }}
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/40 bg-black/35 text-white backdrop-blur transition hover:bg-white/15"
+                aria-label="Share"
+              >
+                <ShareIcon className="h-5 w-5" />
+              </button>
             </div>
+
+            <div className="mt-4 flex items-center gap-2">
+              <span className="text-xs font-bold text-mist">Your rating:</span>
+              <div className="flex items-center gap-0.5">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    onClick={() => setRating(media.key, star === userRating ? 0 : star)}
+                    className="p-0.5 text-yellow-400 transition hover:scale-125"
+                    aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
+                  >
+                    {star <= userRating
+                      ? <StarIcon className="h-4 w-4" />
+                      : <StarOutlineIcon className="h-4 w-4 text-mist" />}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {shareLabel && (
+              <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-400">
+                <CheckIcon className="h-3.5 w-3.5" /> {shareLabel}
+              </p>
+            )}
 
             {trailerLoading && (
               <p className="mt-3 inline-flex items-center gap-2 text-xs text-mist">
@@ -422,8 +504,40 @@ function PlayerView({
   setProvider,
   onSeasonChange,
   onEpisodeChange,
+  onPlayEpisode,
   onClose,
 }) {
+  const containerRef = useRef(null)
+
+  const nextEpisode = episodes.find((e) => e.number === episode + 1)
+  const hasNext = Boolean(nextEpisode)
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') {
+        if (document.fullscreenElement) {
+          document.exitFullscreen()
+        } else {
+          onClose()
+        }
+      } else if (e.key === 'f' || e.key === 'F') {
+        toggleFullscreen()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  const toggleFullscreen = () => {
+    const el = containerRef.current
+    if (!el) return
+    if (document.fullscreenElement) {
+      document.exitFullscreen()
+    } else {
+      el.requestFullscreen?.()
+    }
+  }
+
   return (
     <div className="min-h-screen bg-ink pt-16">
       <div className="flex min-h-16 items-center justify-between border-b border-white/10 bg-ink px-4 sm:px-6 lg:px-10">
@@ -433,17 +547,27 @@ function PlayerView({
         <p className="line-clamp-1 px-4 text-xs font-bold uppercase tracking-wider text-mist">
           {mode === 'trailer' ? `${media.title} trailer` : mediaType === 'tv' ? `${media.title} · S${season} E${episode}` : media.title}
         </p>
-        {mode === 'content' ? (
-          <select
-            value={providerId}
-            onChange={(event) => setProvider(event.target.value)}
-            className="rounded-lg border border-white/15 bg-surface px-3 py-2 text-xs font-bold text-white outline-none"
+        <div className="flex items-center gap-2">
+          {mode === 'content' && (
+            <select
+              value={providerId}
+              onChange={(event) => setProvider(event.target.value)}
+              className="rounded-lg border border-white/15 bg-surface px-3 py-2 text-xs font-bold text-white outline-none"
+            >
+              {PROVIDERS.map((provider) => <option key={provider.id} value={provider.id}>{provider.name}</option>)}
+            </select>
+          )}
+          <button
+            onClick={toggleFullscreen}
+            className="rounded-lg border border-white/15 bg-surface p-2 text-white transition hover:bg-white/10"
+            aria-label="Toggle fullscreen"
+            title="Fullscreen (F)"
           >
-            {PROVIDERS.map((provider) => <option key={provider.id} value={provider.id}>{provider.name}</option>)}
-          </select>
-        ) : <span className="w-20" />}
+            <FullscreenIcon className="h-4 w-4" />
+          </button>
+        </div>
       </div>
-      <div className="mx-auto aspect-video w-full max-w-screen-2xl bg-black">
+      <div ref={containerRef} className="mx-auto aspect-video w-full max-w-screen-2xl bg-black">
         {mode === 'trailer' && trailerUrl ? (
           <iframe
             src={trailerUrl}
@@ -458,12 +582,25 @@ function PlayerView({
       </div>
 
       <div className="mx-auto w-full max-w-screen-2xl px-4 py-7 sm:px-6 lg:px-10">
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-brand">
-          {mode === 'trailer' ? 'Trailer' : mediaType === 'tv' ? `Season ${season} · Episode ${episode}` : 'Now Playing'}
-        </p>
-        <h1 className="mt-1.5 text-2xl font-black tracking-tight text-white sm:text-3xl">
-          {media.title}
-        </h1>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-brand">
+              {mode === 'trailer' ? 'Trailer' : mediaType === 'tv' ? `Season ${season} · Episode ${episode}` : 'Now Playing'}
+            </p>
+            <h1 className="mt-1.5 text-2xl font-black tracking-tight text-white sm:text-3xl">
+              {media.title}
+            </h1>
+          </div>
+          {mode === 'content' && mediaType === 'tv' && hasNext && (
+            <button
+              onClick={() => onPlayEpisode(nextEpisode.number)}
+              className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-black text-black transition hover:bg-cream"
+            >
+              Next Episode
+              <NextIcon className="h-4 w-4" />
+            </button>
+          )}
+        </div>
 
         {mediaType === 'tv' && mode === 'content' && (
           <section className="mt-7 border-t border-white/10 pt-6">

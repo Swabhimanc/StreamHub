@@ -49,18 +49,13 @@ Open **http://localhost:5173**.
 
 > No TMDB key yet? The app ships with a built-in demo catalog so the entire UI works offline of the API. Add a key for the live catalog, genres, trailers and cast.
 
-### Add your TMDB API key (recommended)
+### Add your TMDB API key
 
 1. Sign up: https://www.themoviedb.org/signup
 2. Settings → API → copy your **v3 auth key**
-3. Create `.env`:
+3. Open StreamBox Settings and save the key there.
 
-```bash
-cp .env.example .env
-# VITE_TMDB_API_KEY=your_key_here
-```
-
-Restart the dev server. Real posters, rows, genres, search, trailers and cast data now come from TMDB.
+The key is stored only in that browser's local storage and sent directly to TMDB. It is never included in the production bundle. Real posters, rows, genres, search, trailers and cast data now come from TMDB.
 
 ---
 
@@ -147,7 +142,7 @@ npm run lint      # oxlint
 
 ## 📦 Deploy
 
-It's a static SPA — any static host works (Vercel/Netlify/GitHub Pages). Build with `npm run build`, serve `dist/`, and set your env var `VITE_TMDB_API_KEY` in the host's dashboard. For client-side routes to work on refresh, add an SPA fallback (serve `index.html` for unknown paths).
+It's a static SPA — any static host works (Vercel/Netlify/GitHub Pages). Build with `npm run build` and serve `dist/`. Users add their own TMDB API key in Settings; do not configure a build-time API key. For client-side routes to work on refresh, add an SPA fallback (serve `index.html` for unknown paths).
 
 ---
 

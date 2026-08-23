@@ -38,7 +38,7 @@ export default function MediaGrid({ items, loading, error, onRetry, emptyText = 
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
       {items.map((m) => (
-        <MovieCard key={m.key} media={m} />
+        <MovieCard key={m.key} media={m} fill />
       ))}
     </div>
   )

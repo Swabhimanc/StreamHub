@@ -3,8 +3,10 @@ import { useSearchParams } from 'react-router-dom'
 import { useData } from '../hooks/useData.js'
 import { searchMedia } from '../api/dataService.js'
 import { useApiKey } from '../context/ApiKeyContext.jsx'
+import { useLocalStorage } from '../hooks/useLocalStorage.js'
 import MediaGrid from '../components/MediaGrid.jsx'
-import { SearchIcon, CloseIcon } from '../components/icons.jsx'
+import AdSlot from '../components/AdSlot.jsx'
+import { SearchIcon, CloseIcon, HistoryIcon } from '../components/icons.jsx'
 
 const SUGGESTIONS = [
   'Inception',
@@ -15,23 +17,37 @@ const SUGGESTIONS = [
   'Breaking Bad',
 ]
 
+const MAX_RECENT = 8
+
 export default function SearchPage() {
   const { apiKey } = useApiKey()
   const [searchParams, setSearchParams] = useSearchParams()
   const query = searchParams.get('q') || ''
   const [input, setInput] = useState(query)
   const [debounced, setDebounced] = useState(query)
+  const [recent, setRecent] = useLocalStorage('streambox.recent-searches', [])
   const inputRef = useRef(null)
 
   useEffect(() => {
     const t = setTimeout(() => {
-      setDebounced(input.trim())
-      setSearchParams(input.trim() ? { q: input.trim() } : {}, { replace: true })
+      const trimmed = input.trim()
+      setDebounced(trimmed)
+      setSearchParams(trimmed ? { q: trimmed } : {}, { replace: true })
     }, 350)
     return () => clearTimeout(t)
   }, [input, setSearchParams])
 
+  useEffect(() => {
+    if (!debounced) return
+    setRecent((prev) => {
+      const filtered = prev.filter((s) => s.toLowerCase() !== debounced.toLowerCase())
+      return [debounced, ...filtered].slice(0, MAX_RECENT)
+    })
+  }, [debounced, setRecent])
+
   const results = useData(() => (debounced ? searchMedia(debounced) : Promise.resolve([])), [debounced, apiKey])
+
+  const clearRecent = () => setRecent([])
 
   return (
     <div className="mx-auto max-w-screen-2xl px-4 pb-16 pt-24 sm:px-6 lg:px-10">
@@ -59,24 +75,59 @@ export default function SearchPage() {
         )}
       </div>
 
+      <AdSlot slot="8578227504" className="mb-8" />
+
       {!debounced ? (
-        <div>
-          <h2 className="mb-4 text-sm font-bold uppercase tracking-widest text-mist">
-            Try searching for
-          </h2>
-          <div className="flex flex-wrap gap-2">
-            {SUGGESTIONS.map((s) => (
-              <button
-                key={s}
-                onClick={() => {
-                  setInput(s)
-                  inputRef.current?.focus()
-                }}
-                className="rounded-full border border-white/15 bg-surface px-4 py-2 text-sm text-cream/85 transition hover:border-brand hover:text-white"
-              >
-                {s}
-              </button>
-            ))}
+        <div className="space-y-8">
+          {recent.length > 0 && (
+            <div>
+              <div className="mb-4 flex items-center gap-2">
+                <HistoryIcon className="h-4 w-4 text-mist" />
+                <h2 className="text-sm font-bold uppercase tracking-widest text-mist">
+                  Recent searches
+                </h2>
+                <button
+                  onClick={clearRecent}
+                  className="ml-auto text-xs font-semibold text-mist transition hover:text-white"
+                >
+                  Clear
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {recent.map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => {
+                      setInput(s)
+                      inputRef.current?.focus()
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-surface px-4 py-2 text-sm text-cream/85 transition hover:border-brand hover:text-white"
+                  >
+                    <HistoryIcon className="h-3.5 w-3.5 text-mist" />
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          <div>
+            <h2 className="mb-4 text-sm font-bold uppercase tracking-widest text-mist">
+              Try searching for
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {SUGGESTIONS.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => {
+                    setInput(s)
+                    inputRef.current?.focus()
+                  }}
+                  className="rounded-full border border-white/15 bg-surface px-4 py-2 text-sm text-cream/85 transition hover:border-brand hover:text-white"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       ) : (
