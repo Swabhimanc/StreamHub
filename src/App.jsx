@@ -47,7 +47,7 @@ export default function App() {
                 </Routes>
               </main>
               <div className="mx-auto w-full max-w-screen-2xl px-4 pb-8 sm:px-6 lg:px-10">
-                <AdSlot slot="5952064162" />
+                <AdSlot zoneId="12057734" />
               </div>
               <Footer />
               <VideoModal />

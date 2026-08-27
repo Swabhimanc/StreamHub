@@ -75,7 +75,7 @@ export default function SearchPage() {
         )}
       </div>
 
-      <AdSlot slot="8578227504" className="mb-8" />
+      <AdSlot zoneId="12057866" className="mb-8" />
 
       {!debounced ? (
         <div className="space-y-8">

@@ -33,7 +33,7 @@ export default function HomePage() {
           <Fragment key={source.label}>
             {index === 3 && (
               <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-10">
-                <AdSlot slot="6962873440" format="fluid" layoutKey="-6t+ed+2i-1n-4w" />
+                <AdSlot zoneId="12057822" />
               </div>
             )}
             <HomeRow source={source} />

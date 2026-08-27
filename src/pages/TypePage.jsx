@@ -7,7 +7,7 @@ import AdSlot from '../components/AdSlot.jsx'
 import Row from '../components/Row.jsx'
 import { sortByPopularity } from '../data/media.js'
 
-export default function TypePage({ mediaType, sources, label, adSlot }) {
+export default function TypePage({ mediaType, sources, label }) {
   const { apiKey } = useApiKey()
   const trending = useData(() => getTrending(mediaType), [mediaType, apiKey])
   const featured = useMemo(
@@ -19,11 +19,9 @@ export default function TypePage({ mediaType, sources, label, adSlot }) {
     <div className="pb-10">
       <FeaturedCarousel items={featured} label={label} />
 
-      {adSlot && (
-        <div className="mx-auto mt-4 max-w-screen-2xl px-4 sm:px-6 lg:px-10">
-          <AdSlot slot={adSlot} />
-        </div>
-      )}
+      <div className="mx-auto mt-4 max-w-screen-2xl px-4 sm:px-6 lg:px-10">
+        <AdSlot zoneId="12057874" />
+      </div>
 
       <div className="relative z-10 mt-4 space-y-10">
         {sources.map((source) => (

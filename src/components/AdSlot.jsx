@@ -1,52 +1,51 @@
 import { useEffect, useRef } from 'react'
 
-const ADSENSE_CLIENT = 'ca-pub-5083478504723257'
-
 export default function AdSlot({
-  slot,
-  format = 'auto',
-  layoutKey,
-  responsive = true,
+  zoneId,
   className = '',
   style = {},
   label = true,
 }) {
-  const adRef = useRef(null)
-  const initializedRef = useRef(false)
+  const containerRef = useRef(null)
 
   useEffect(() => {
-    if (initializedRef.current) return
+    const container = containerRef.current
+    if (!container) return
 
-    try {
-      if (adRef.current && adRef.current.children.length === 0) {
-        ;(window.adsbygoogle = window.adsbygoogle || []).push({})
-        initializedRef.current = true
+    let cancelled = false
+    let scriptEl = null
+
+    const interval = setInterval(() => {
+      if (cancelled) {
+        clearInterval(interval)
+        return
       }
-    } catch {
-      // AdSense not loaded yet or blocked
-    }
-  }, [])
+      if (window.aclib && typeof window.aclib.runBanner === 'function') {
+        clearInterval(interval)
+        scriptEl = document.createElement('script')
+        scriptEl.type = 'text/javascript'
+        scriptEl.text = `aclib.runBanner({ zoneId: '${zoneId}' });`
+        container.appendChild(scriptEl)
+      }
+    }, 200)
 
-  const adAttrs = {
-    style: { display: 'block', ...style },
-    'data-ad-client': ADSENSE_CLIENT,
-    'data-ad-slot': slot,
-    ...(format === 'fluid'
-      ? { 'data-ad-format': 'fluid', 'data-ad-layout-key': layoutKey }
-      : {
-          'data-ad-format': format,
-          ...(responsive && { 'data-full-width-responsive': 'true' }),
-        }),
-  }
+    return () => {
+      cancelled = true
+      clearInterval(interval)
+      if (scriptEl && scriptEl.parentNode) {
+        scriptEl.parentNode.removeChild(scriptEl)
+      }
+    }
+  }, [zoneId])
 
   return (
-    <div className={`rounded-xl border border-white/10 bg-surface p-3 ${className}`}>
+    <div className={`rounded-xl border border-white/10 bg-surface p-3 ${className}`} style={style}>
       {label && (
         <p className="mb-1.5 text-center text-[10px] font-semibold uppercase tracking-widest text-mist">
           Advertisement
         </p>
       )}
-      <ins ref={adRef} className="adsbygoogle" {...adAttrs} />
+      <div ref={containerRef} className="min-h-[90px]" />
     </div>
   )
 }

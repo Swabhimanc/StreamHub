@@ -44,7 +44,7 @@ export default function GenrePage() {
       <h1 className="text-3xl font-black text-white sm:text-4xl">
         {fallbackName || genreId}
       </h1>
-      <AdSlot slot="3517472511" className="my-8" />
+      <AdSlot zoneId="12057858" className="my-8" />
       <GenreGrid genreId={genreId} />
     </div>
   )
