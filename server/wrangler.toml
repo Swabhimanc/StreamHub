@@ -1,0 +1,13 @@
+name = "streambox-party"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[durable_objects]
+bindings = [
+  { name = "PARTY_ROOMS", class_name = "PartyRoom" }
+]
+
+[[migrations]]
+tag = "v1"
+new_classes = ["PartyRoom"]
