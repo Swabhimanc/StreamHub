@@ -5,7 +5,6 @@ import { getGenreTitles } from '../api/dataService.js'
 import { useApiKey } from '../context/ApiKeyContext.jsx'
 import { GENRES } from '../components/Navbar.jsx'
 import MediaGrid from '../components/MediaGrid.jsx'
-import AdSlot from '../components/AdSlot.jsx'
 import { FilterIcon } from '../components/icons.jsx'
 
 const SORT_OPTIONS = [
@@ -44,7 +43,6 @@ export default function GenrePage() {
       <h1 className="text-3xl font-black text-white sm:text-4xl">
         {fallbackName || genreId}
       </h1>
-      <AdSlot zoneId="12057858" className="my-8" />
       <GenreGrid genreId={genreId} />
     </div>
   )

@@ -5,7 +5,6 @@ import { getTrending, getRow, ROW_SOURCES, getRecommendationsForHistory } from '
 import { useApiKey } from '../context/ApiKeyContext.jsx'
 import { useHistory } from '../context/HistoryContext.jsx'
 import FeaturedCarousel from '../components/FeaturedCarousel.jsx'
-import AdSlot from '../components/AdSlot.jsx'
 import Row from '../components/Row.jsx'
 import MovieCard from '../components/MovieCard.jsx'
 import { sortByPopularity } from '../data/media.js'
@@ -31,11 +30,6 @@ export default function HomePage() {
 
         {ROW_SOURCES.map((source, index) => (
           <Fragment key={source.label}>
-            {index === 3 && (
-              <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-10">
-                <AdSlot zoneId="12057822" />
-              </div>
-            )}
             <HomeRow source={source} />
           </Fragment>
         ))}

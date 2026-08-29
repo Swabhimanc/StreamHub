@@ -8,6 +8,7 @@ const navLinks = [
   { to: '/', label: 'Home' },
   { to: '/movies', label: 'Movies' },
   { to: '/series', label: 'Series' },
+  { to: '/party', label: 'Watch Party' },
   { to: '/mylist', label: 'My List' },
   { to: '/history', label: 'History' },
 ]

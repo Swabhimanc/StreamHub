@@ -5,7 +5,6 @@ import { searchMedia } from '../api/dataService.js'
 import { useApiKey } from '../context/ApiKeyContext.jsx'
 import { useLocalStorage } from '../hooks/useLocalStorage.js'
 import MediaGrid from '../components/MediaGrid.jsx'
-import AdSlot from '../components/AdSlot.jsx'
 import { SearchIcon, CloseIcon, HistoryIcon } from '../components/icons.jsx'
 
 const SUGGESTIONS = [
@@ -74,8 +73,6 @@ export default function SearchPage() {
           </button>
         )}
       </div>
-
-      <AdSlot zoneId="12057866" className="mb-8" />
 
       {!debounced ? (
         <div className="space-y-8">

@@ -18,7 +18,6 @@ import { useRatings } from '../context/RatingsContext.jsx'
 import { PROVIDERS } from '../data/providers.js'
 import MovieCard from '../components/MovieCard.jsx'
 import PlayerEmbed from '../components/PlayerEmbed.jsx'
-import VideoAd from '../components/VideoAd.jsx'
 import {
   CheckIcon,
   ChevronLeftIcon,
@@ -509,16 +508,9 @@ function PlayerView({
   onClose,
 }) {
   const containerRef = useRef(null)
-  const [adCompleted, setAdCompleted] = useState(false)
 
   const nextEpisode = episodes.find((e) => e.number === episode + 1)
   const hasNext = Boolean(nextEpisode)
-
-  useEffect(() => {
-    if (mode === 'content') {
-      setAdCompleted(false)
-    }
-  }, [mode, episode, season])
 
   useEffect(() => {
     const onKey = (e) => {
@@ -584,8 +576,6 @@ function PlayerView({
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
           />
-        ) : !adCompleted ? (
-          <VideoAd onComplete={() => setAdCompleted(true)} />
         ) : (
           <PlayerEmbed mediaType={mediaType} id={id} season={season} episode={episode} title={media.title} />
         )}

@@ -7,7 +7,6 @@ import { PlayerProvider } from './context/PlayerContext.jsx'
 import { ProviderProvider } from './context/ProviderContext.jsx'
 import Navbar from './components/Navbar.jsx'
 import Footer from './components/Footer.jsx'
-import AdSlot from './components/AdSlot.jsx'
 import VideoModal from './components/VideoModal.jsx'
 import ScrollToTop from './components/ScrollToTop.jsx'
 import HomePage from './pages/HomePage.jsx'
@@ -19,6 +18,8 @@ import MoviesPage from './pages/MoviesPage.jsx'
 import SeriesPage from './pages/SeriesPage.jsx'
 import WatchPage from './pages/WatchPage.jsx'
 import SettingsPage from './pages/SettingsPage.jsx'
+import WatchPartyPage from './pages/WatchPartyPage.jsx'
+import WatchPartyRoom from './pages/WatchPartyRoom.jsx'
 
 export default function App() {
   return (
@@ -39,6 +40,8 @@ export default function App() {
                   <Route path="/movies" element={<MoviesPage />} />
                   <Route path="/series" element={<SeriesPage />} />
                   <Route path="/watch/:type/:id" element={<WatchPage />} />
+                  <Route path="/party" element={<WatchPartyPage />} />
+                  <Route path="/party/:code" element={<WatchPartyRoom />} />
                   <Route path="/mylist" element={<MyListPage />} />
                   <Route path="/history" element={<HistoryPage />} />
                   <Route path="/settings" element={<SettingsPage />} />
@@ -46,9 +49,6 @@ export default function App() {
                   <Route path="*" element={<HomePage />} />
                 </Routes>
               </main>
-              <div className="mx-auto w-full max-w-screen-2xl px-4 pb-8 sm:px-6 lg:px-10">
-                <AdSlot zoneId="12057734" />
-              </div>
               <Footer />
               <VideoModal />
             </div>
