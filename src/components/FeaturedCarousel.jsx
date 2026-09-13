@@ -111,14 +111,14 @@ export default function FeaturedCarousel({ items, label }) {
                 <div className="mt-7 flex flex-wrap items-center gap-3">
                   <button
                     onClick={() => navigate(watchPath)}
-                    className="inline-flex items-center gap-2 rounded bg-white px-7 py-3 text-sm font-bold text-black transition hover:bg-cream focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                    className="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3 text-sm font-bold text-black transition hover:bg-cream focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
                   >
                     <PlayIcon className="h-5 w-5" />
                     Play
                   </button>
                   <button
                     onClick={() => navigate(watchPath)}
-                    className="inline-flex items-center gap-2 rounded bg-white/25 px-7 py-3 text-sm font-bold text-white backdrop-blur-sm transition hover:bg-white/40"
+                    className="inline-flex items-center gap-2 rounded-full bg-white/25 px-7 py-3 text-sm font-bold text-white backdrop-blur-sm transition hover:bg-white/40"
                   >
                     <InfoIcon className="h-5 w-5" />
                     More Info

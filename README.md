@@ -57,17 +57,15 @@ Open **http://localhost:5173**.
 
 > No TMDB key yet? The app ships with a built-in demo catalog so the entire UI works offline of the API. Add a key for the live catalog, genres, trailers and cast.
 
-### Add your TMDB API key
+### TMDB API key
 
-1. Sign up: https://www.themoviedb.org/signup
-2. Settings → API → copy your **v3 auth key**
+A public read-only TMDB key is **baked into the build by default** (`src/api/tmdb.js`) — visitors get the live catalog on first load with zero configuration. Override order:
 
-Two ways to use it:
+1. **Per-browser** — StreamBox Settings; stored in that browser's localStorage.
+2. **Build-time** — `VITE_TMDB_API_KEY` in `.env` before `npm run build`.
+3. **Built-in default** — ships in the bundle; works for demos/hobby deploys. If it gets rate-limited, swap in your own key (free at https://www.themoviedb.org → Settings → API).
 
-- **Build-time (recommended for a private deploy)** — set `VITE_TMDB_API_KEY` in `.env` before `npm run build`; every visitor gets the live catalog with no setup. The key is shipped inside the bundle, so deploy it where you're comfortable exposing a read-only TMDB key.
-- **Per-browser** — open StreamBox Settings and save the key there. Stored in that browser's localStorage; overrides the build-time key.
-
-Either way, the key is sent directly from the browser to TMDB. With no key at all, the app runs on the built-in demo catalog (mock data, no live genres/trailers/cast).
+The key travels directly from the browser to TMDB. If all keys fail, the app falls back to the demo catalog.
 
 ---
 
@@ -158,7 +156,7 @@ npm run lint      # oxlint
 
 ## 📦 Deploy
 
-It's a static SPA — any static host works (Vercel/Netlify/GitHub Pages). Set `VITE_TMDB_API_KEY` (and `VITE_PARTY_WS_URL` for watch parties) in your host's environment, build with `npm run build` and serve `dist/`. Without keys, visitors can add their own TMDB key in Settings and the app falls back to the demo catalog otherwise. For client-side routes to work on refresh, add an SPA fallback (serve `index.html` for unknown paths).
+It's a static SPA — any static host works (Vercel/Netlify/GitHub Pages). Build with `npm run build` and serve `dist/`. TMDB works out of the box via the built-in key; set `VITE_TMDB_API_KEY` only to use your own (see “TMDB API key”). For watch parties set `VITE_PARTY_WS_URL` to your deployed worker. For client-side routes to work on refresh, add an SPA fallback (serve `index.html` for unknown paths).
 
 ---
 

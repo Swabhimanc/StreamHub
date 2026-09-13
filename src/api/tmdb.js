@@ -1,6 +1,10 @@
 import { API_BASE, IMG_BASE, requests } from '../data/requests.js'
 
-let tmdbApiKey = import.meta.env.VITE_TMDB_API_KEY?.trim() || ''
+// Public TMDB key baked in at build/deploy time so users need no setup.
+// VITE_TMDB_API_KEY and the in-app Settings page can override it.
+const BUILT_IN_TMDB_API_KEY = '18f62ff5a3f8af9b581bda514dd9dfd6'
+
+let tmdbApiKey = import.meta.env.VITE_TMDB_API_KEY?.trim() || BUILT_IN_TMDB_API_KEY
 
 export const setTmdbApiKey = (value) => {
   tmdbApiKey = String(value || '').trim()
