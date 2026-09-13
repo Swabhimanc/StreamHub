@@ -11,9 +11,19 @@ export function PreferencesProvider({ children }) {
     setPrefs((prev) => ({ ...prev, [key]: value }))
   }, [setPrefs])
 
+  const setCountry = useCallback(
+    (code) => setPreference('country', code || ''),
+    [setPreference]
+  )
+
   const value = useMemo(
-    () => ({ trailerDefault: prefs.trailerDefault ?? false, setPreference }),
-    [prefs.trailerDefault, setPreference]
+    () => ({
+      trailerDefault: prefs.trailerDefault ?? false,
+      country: prefs.country ?? '',
+      setCountry,
+      setPreference,
+    }),
+    [prefs.trailerDefault, prefs.country, setCountry, setPreference]
   )
 
   return <PreferencesContext.Provider value={value}>{children}</PreferencesContext.Provider>

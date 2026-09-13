@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react'
 import { useApiKey } from '../context/ApiKeyContext.jsx'
 import { useMyList } from '../context/MyListContext.jsx'
+import { usePreferences } from '../context/PreferencesContext.jsx'
 import { validateTmdbApiKey } from '../api/tmdb.js'
+import { COUNTRIES } from '../data/countries.js'
 import { SpinnerIcon } from '../components/icons.jsx'
 import MovieCard from '../components/MovieCard.jsx'
 
 export default function SettingsPage() {
   const { apiKey, updateApiKey, hasApiKey } = useApiKey()
   const { items } = useMyList()
+  const { country, setCountry } = usePreferences()
   const [draft, setDraft] = useState(apiKey)
   const [showKey, setShowKey] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -128,6 +131,38 @@ export default function SettingsPage() {
             </button>
           )}
         </div>
+      </div>
+
+      {/* Content Country Card */}
+      <div className="mt-6 rounded-2xl border border-white/12 bg-surface p-4 sm:p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-extrabold text-white">Content Country</h2>
+            <p className="mt-0.5 text-xs text-mist">
+              Curates Home, Movies and Series rows with titles from one country
+            </p>
+          </div>
+        </div>
+
+        <label className="mt-5 block text-[10px] font-black uppercase tracking-[0.16em] text-mist">
+          Country
+        </label>
+        <select
+          value={country}
+          onChange={(e) => setCountry(e.target.value)}
+          className="mt-2 w-full cursor-pointer rounded-lg border border-white/12 bg-[#0d0d0d] px-3.5 py-3 text-sm font-bold text-white outline-none transition focus:border-brand"
+        >
+          <option value="">Global (no filter)</option>
+          {COUNTRIES.map((c) => (
+            <option key={c.code} value={c.code}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+
+        <p className="mt-2 text-[10px] leading-relaxed text-mist">
+          Trending rows become country-specific picks since TMDB trending cannot be filtered by region.
+        </p>
       </div>
 
       {/* My List section */}

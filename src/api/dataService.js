@@ -1,6 +1,7 @@
 import { api, hasApiKey } from './tmdb.js'
 import { requests } from '../data/requests.js'
 import { normalizeMedia, sortByPopularity, uniqueByKey } from '../data/media.js'
+import { countryName } from '../data/countries.js'
 import {
   getMockMedia,
   mockSearch,
@@ -11,10 +12,41 @@ import {
 
 export const isLive = () => hasApiKey()
 
-export async function getTrending(mediaType) {
+const today = () => new Date().toISOString().slice(0, 10)
+const daysAgo = (n) => new Date(Date.now() - n * 86400000).toISOString().slice(0, 10)
+
+export async function getTrending(mediaType, country) {
   if (!hasApiKey()) return mediaType ? getMockMedia().filter((m) => m.mediaType === mediaType) : getMockMedia()
+  if (country) return getCountryTrending(country, mediaType)
   const raw = await api.list(mediaType ? `/trending/${mediaType}/week` : requests.trending)
   return uniqueByKey(raw.map((r) => normalizeMedia(r, mediaType)))
+}
+
+// Discover content produced in a country (TMDB `with_origin_country`),
+// sorted by popularity — the closest country equivalent of "trending".
+async function getCountryTrending(country, mediaType) {
+  const types = mediaType ? [mediaType] : ['movie', 'tv']
+  const lists = await Promise.all(
+    types.map((type) =>
+      api.list(`/discover/${type}`, {
+        with_origin_country: country,
+        sort_by: 'popularity.desc',
+        include_adult: false,
+      })
+    )
+  )
+  const all = lists.flatMap((raw, i) => raw.map((r) => normalizeMedia(r, types[i])))
+  return sortByPopularity(uniqueByKey(all))
+}
+
+async function discoverMedia(mediaType, country, params) {
+  if (!hasApiKey()) return getMockMedia().filter((m) => m.mediaType === mediaType)
+  const raw = await api.list(`/discover/${mediaType}`, {
+    with_origin_country: country,
+    include_adult: false,
+    ...params,
+  })
+  return raw.map((r) => normalizeMedia(r, mediaType))
 }
 
 // Rows for the home page: [label, requestPath]
@@ -24,8 +56,21 @@ export const ROW_SOURCES = [
   { label: 'Top Rated', path: requests.topRatedMovies },
   { label: 'Popular Series', path: requests.popularTv },
   { label: 'Now Playing', path: requests.nowPlaying },
-  { label: 'Upcoming', path: requests.upcoming },
 ]
+
+// Country-filtered variants replace the global rows entirely when a
+// country is selected (trending can't be region-filtered on TMDB).
+export function getRowSources(country) {
+  if (!country) return ROW_SOURCES
+  const name = countryName(country)
+  return [
+    { label: `Popular in ${name}`, fetch: () => getCountryTrending(country) },
+    { label: `Popular Movies from ${name}`, fetch: () => discoverMedia('movie', country, { sort_by: 'popularity.desc' }) },
+    { label: `Top Rated Movies from ${name}`, fetch: () => discoverMedia('movie', country, { sort_by: 'vote_average.desc', 'vote_count.gte': 200 }) },
+    { label: `Popular Series from ${name}`, fetch: () => discoverMedia('tv', country, { sort_by: 'popularity.desc' }) },
+    { label: `Top Rated Series from ${name}`, fetch: () => discoverMedia('tv', country, { sort_by: 'vote_average.desc', 'vote_count.gte': 100 }) },
+  ]
+}
 
 export async function getRow({ label, path, fetch: customFetch }) {
   if (customFetch) return customFetch()
@@ -39,14 +84,33 @@ export const MOVIES_ROW_SOURCES = [
   { label: 'Popular Movies', path: requests.popularMovies },
   { label: 'Top Rated', path: requests.topRatedMovies },
   { label: 'Now Playing', path: requests.nowPlaying },
-  { label: 'Upcoming', path: requests.upcoming },
 ]
+
+export function getMoviesRowSources(country) {
+  if (!country) return MOVIES_ROW_SOURCES
+  const name = countryName(country)
+  return [
+    { label: `Popular Movies from ${name}`, fetch: () => discoverMedia('movie', country, { sort_by: 'popularity.desc' }) },
+    { label: `Top Rated Movies from ${name}`, fetch: () => discoverMedia('movie', country, { sort_by: 'vote_average.desc', 'vote_count.gte': 200 }) },
+    { label: `New Movies from ${name}`, fetch: () => discoverMedia('movie', country, { 'primary_release_date.lte': today(), 'primary_release_date.gte': daysAgo(365), sort_by: 'popularity.desc' }) },
+  ]
+}
 
 export const SERIES_ROW_SOURCES = [
   { label: 'Trending Series', fetch: () => getTrending('tv') },
   { label: 'Popular Series', path: requests.popularTv },
   { label: 'Top Rated Series', path: requests.topRatedTv },
 ]
+
+export function getSeriesRowSources(country) {
+  if (!country) return SERIES_ROW_SOURCES
+  const name = countryName(country)
+  return [
+    { label: `Popular Series from ${name}`, fetch: () => discoverMedia('tv', country, { sort_by: 'popularity.desc' }) },
+    { label: `Top Rated Series from ${name}`, fetch: () => discoverMedia('tv', country, { sort_by: 'vote_average.desc', 'vote_count.gte': 100 }) },
+    { label: `New Series from ${name}`, fetch: () => discoverMedia('tv', country, { 'first_air_date.lte': today(), 'first_air_date.gte': daysAgo(365), sort_by: 'popularity.desc' }) },
+  ]
+}
 
 export async function getGenres() {
   if (!hasApiKey()) return mockGenres()
@@ -85,8 +149,8 @@ export async function getGenreTitles(genreId, page = 1) {
 export async function searchMedia(query, page = 1) {
   if (!hasApiKey()) return mockSearch(query)
   const [movies, shows] = await Promise.all([
-    api.list(requests.searchMovie, { query, page, include_adult: false }),
-    api.list(requests.searchTv, { query, page, include_adult: false }),
+    api.list(requests.searchMovie, { query, page, include_adult: false }, { includeUnrated: true }),
+    api.list(requests.searchTv, { query, page, include_adult: false }, { includeUnrated: true }),
   ])
   const all = [...movies.map((m) => normalizeMedia(m, 'movie')), ...shows.map((s) => normalizeMedia(s, 'tv'))]
   return sortByPopularity(uniqueByKey(all))

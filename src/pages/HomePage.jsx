@@ -1,9 +1,10 @@
 import { Fragment, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useData } from '../hooks/useData.js'
-import { getTrending, getRow, ROW_SOURCES, getRecommendationsForHistory } from '../api/dataService.js'
+import { getTrending, getRow, getRowSources, getRecommendationsForHistory } from '../api/dataService.js'
 import { useApiKey } from '../context/ApiKeyContext.jsx'
 import { useHistory } from '../context/HistoryContext.jsx'
+import { usePreferences } from '../context/PreferencesContext.jsx'
 import FeaturedCarousel from '../components/FeaturedCarousel.jsx'
 import Row from '../components/Row.jsx'
 import MovieCard from '../components/MovieCard.jsx'
@@ -13,7 +14,8 @@ import { HistoryIcon } from '../components/icons.jsx'
 export default function HomePage() {
   const { apiKey } = useApiKey()
   const { items: historyItems } = useHistory()
-  const trending = useData(getTrending, [apiKey])
+  const { country } = usePreferences()
+  const trending = useData(() => getTrending(null, country), [apiKey, country])
   const featured = useMemo(
     () => (trending.data && trending.data.length ? sortByPopularity(trending.data).slice(0, 6) : []),
     [trending.data]
@@ -28,7 +30,7 @@ export default function HomePage() {
           <ContinueWatchingRow items={historyItems} />
         )}
 
-        {ROW_SOURCES.map((source) => (
+        {getRowSources(country).map((source) => (
           <Fragment key={source.label}>
             <HomeRow source={source} />
           </Fragment>

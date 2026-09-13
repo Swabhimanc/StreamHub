@@ -9,7 +9,6 @@ export const requests = {
   popularTv: '/tv/popular',
   topRatedTv: '/tv/top_rated',
   nowPlaying: '/movie/now_playing',
-  upcoming: '/movie/upcoming',
   genresMovie: '/genre/movie/list',
   genresTv: '/genre/tv/list',
   discover: '/discover/movie',

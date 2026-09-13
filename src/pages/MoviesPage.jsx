@@ -1,6 +1,14 @@
 import TypePage from './TypePage.jsx'
-import { MOVIES_ROW_SOURCES } from '../api/dataService.js'
+import { getMoviesRowSources } from '../api/dataService.js'
+import { usePreferences } from '../context/PreferencesContext.jsx'
 
 export default function MoviesPage() {
-  return <TypePage mediaType="movie" sources={MOVIES_ROW_SOURCES} label="Featured Film" />
+  const { country } = usePreferences()
+  return (
+    <TypePage
+      mediaType="movie"
+      sources={getMoviesRowSources(country)}
+      label="Featured Film"
+    />
+  )
 }

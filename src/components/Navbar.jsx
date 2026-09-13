@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { useMyList } from '../context/MyListContext.jsx'
 import { useHistory } from '../context/HistoryContext.jsx'
-import { SearchIcon, CloseIcon } from './icons.jsx'
+import { usePreferences } from '../context/PreferencesContext.jsx'
+import { COUNTRIES } from '../data/countries.js'
+import { SearchIcon, CloseIcon, CheckIcon, GlobeIcon } from './icons.jsx'
 
 const navLinks = [
   { to: '/', label: 'Home' },
@@ -81,6 +83,8 @@ export default function Navbar() {
         </div>
 
         <div className="ml-auto flex items-center gap-2">
+          <CountrySelect />
+
           <Link
             to="/search"
             className="rounded-full p-2 text-cream/85 transition-colors hover:bg-white/10 hover:text-white"
@@ -144,6 +148,82 @@ export default function Navbar() {
         </div>
       )}
     </header>
+  )
+}
+
+function CountrySelect() {
+  const [open, setOpen] = useState(false)
+  const { country, setCountry } = usePreferences()
+  const ref = useRef(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    return () => document.removeEventListener('mousedown', onDown)
+  }, [open])
+
+  const active = COUNTRIES.find((c) => c.code === country)
+
+  const select = (code) => {
+    setCountry(code)
+    setOpen(false)
+  }
+
+  const itemClass = (isActive) =>
+    `flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+      isActive ? 'bg-brand/20 text-white' : 'text-cream/85 hover:bg-white/10 hover:text-white'
+    }`
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-1.5 rounded-full px-2.5 py-2 text-cream/85 transition-colors hover:bg-white/10 hover:text-white"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label="Select content country"
+      >
+        <GlobeIcon className="h-5 w-5" />
+        <span className="text-xs font-bold">{active ? active.code : 'Global'}</span>
+        <svg
+          className={`h-3.5 w-3.5 transition-transform duration-300 ${open ? 'rotate-180' : ''}`}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          aria-hidden="true"
+        >
+          <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+      {open && (
+        <div
+          className="absolute right-0 top-full z-50 mt-2 max-h-[70vh] w-56 overflow-y-auto rounded-xl border border-white/10 bg-surface-light/95 p-2 shadow-2xl shadow-black/50 backdrop-blur"
+          role="listbox"
+          aria-label="Content country"
+        >
+          <button onClick={() => select('')} className={itemClass(!country)} role="option" aria-selected={!country}>
+            Global
+            {!country && <CheckIcon className="h-4 w-4 text-brand" />}
+          </button>
+          {COUNTRIES.map((c) => (
+            <button
+              key={c.code}
+              onClick={() => select(c.code)}
+              className={itemClass(c.code === country)}
+              role="option"
+              aria-selected={c.code === country}
+            >
+              {c.name}
+              {c.code === country && <CheckIcon className="h-4 w-4 text-brand" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
