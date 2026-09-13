@@ -95,6 +95,22 @@ function HistoryCard({ entry, onRemove }) {
 
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent opacity-70 transition-opacity group-hover:opacity-100" />
 
+        {entry.durationSeconds > 0 && entry.positionSeconds > 0 && Math.ceil((entry.durationSeconds - entry.positionSeconds) / 60) >= 1 && (
+          <div className="pointer-events-none absolute bottom-2.5 right-2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-bold text-white/90 backdrop-blur">
+            {Math.ceil((entry.durationSeconds - entry.positionSeconds) / 60)}m left
+          </div>
+        )}
+        {entry.durationSeconds > 0 && entry.positionSeconds > 0 && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1 w-full overflow-hidden bg-black/55">
+            <div
+              className="h-full rounded-r-full bg-brand"
+              style={{
+                width: `${Math.max(2, Math.min(100, (entry.positionSeconds / entry.durationSeconds) * 100))}%`,
+              }}
+            />
+          </div>
+        )}
+
         <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition group-hover:opacity-100">
           <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-black">
             <PlayIcon className="h-6 w-6" />
@@ -127,11 +143,25 @@ function HistoryCard({ entry, onRemove }) {
               S{entry.season} E{entry.episode}
             </span>
           )}
+          {entry.positionSeconds >= 60 && (
+            <span className="rounded border border-white/15 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-cream/80">
+              ▶ {formatClock(entry.positionSeconds)}
+            </span>
+          )}
         </div>
         <p className="mt-1 text-[11px] text-mist">{timeAgo(entry.watchedAt)}</p>
       </div>
     </div>
   )
+}
+
+function formatClock(seconds) {
+  const total = Math.floor(seconds)
+  const pad = (n) => String(n).padStart(2, '0')
+  const h = Math.floor(total / 3600)
+  const m = Math.floor((total % 3600) / 60)
+  const s = total % 60
+  return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`
 }
 
 function timeAgo(timestamp) {

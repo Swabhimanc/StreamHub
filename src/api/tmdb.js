@@ -1,6 +1,6 @@
 import { API_BASE, IMG_BASE, requests } from '../data/requests.js'
 
-let tmdbApiKey = ''
+let tmdbApiKey = import.meta.env.VITE_TMDB_API_KEY?.trim() || ''
 
 export const setTmdbApiKey = (value) => {
   tmdbApiKey = String(value || '').trim()

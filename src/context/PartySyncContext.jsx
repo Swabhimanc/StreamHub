@@ -23,6 +23,7 @@ export function PartySyncProvider({ children }) {
   const [partyMedia, setPartyMedia] = useState(null)
   const [lastEvent, setLastEvent] = useState(null)
   const [syncRequested, setSyncRequested] = useState(false)
+  const [syncRequestId, setSyncRequestId] = useState(0)
   const [shareActive, setShareActive] = useState(false)
   const [chatMessages, setChatMessages] = useState([])
   const [voiceParticipants, setVoiceParticipants] = useState([])
@@ -144,11 +145,15 @@ export function PartySyncProvider({ children }) {
           setLastEvent(data.currentState)
         }
         break
-      case 'room:state':
+      case 'room:state': {
         setParticipants(data.participants || [])
-        setHostId(data.hostId || null)
-        if (data.newHostId) setHostId(data.newHostId)
+        const newHostId = data.newHostId || data.hostId || null
+        setHostId(newHostId)
+        if (data.newHostId && data.newHostId === participantId) {
+          setRole('host')
+        }
         break
+      }
       case 'room:left':
         setParticipants((prev) => prev.filter((p) => p.id !== data.participantId))
         break
@@ -179,6 +184,7 @@ export function PartySyncProvider({ children }) {
         break
       case 'sync_requested':
         setSyncRequested(true)
+        setSyncRequestId((n) => n + 1)
         break
       case 'share:started':
         setShareActive(true)
@@ -209,7 +215,7 @@ export function PartySyncProvider({ children }) {
         setError(data.message || 'An error occurred')
         break
     }
-  }, [navigate, disconnect])
+  }, [navigate, disconnect, participantId])
 
   useEffect(() => {
     const isPartyRoute = location.pathname.startsWith('/party/') && location.pathname !== '/party'
@@ -289,6 +295,7 @@ export function PartySyncProvider({ children }) {
     partyMedia,
     lastEvent,
     syncRequested,
+    syncRequestId,
     shareActive,
     error,
     createRoom,

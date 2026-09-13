@@ -28,7 +28,7 @@ export default function HomePage() {
           <ContinueWatchingRow items={historyItems} />
         )}
 
-        {ROW_SOURCES.map((source, index) => (
+        {ROW_SOURCES.map((source) => (
           <Fragment key={source.label}>
             <HomeRow source={source} />
           </Fragment>
@@ -78,7 +78,11 @@ function ContinueWatchingRow({ items }) {
 function HistoryCard({ entry }) {
   return (
     <div className="w-[230px] shrink-0">
-      <MovieCard media={entry} getPath={watchPath} />
+      <MovieCard
+        media={entry}
+        getPath={watchPath}
+        progress={{ current: entry.positionSeconds, total: entry.durationSeconds }}
+      />
     </div>
   )
 }

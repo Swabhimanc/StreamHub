@@ -5,7 +5,7 @@ import { useMyList } from '../context/MyListContext.jsx'
 import { useRatings } from '../context/RatingsContext.jsx'
 import { PlusIcon, CheckIcon, StarIcon } from './icons.jsx'
 
-export default function MovieCard({ media, size = 'md', fill = false, getPath }) {
+export default function MovieCard({ media, size = 'md', fill = false, getPath, progress = null }) {
   const navigate = useNavigate()
   const { has, toggle } = useMyList()
   const { get: getRating } = useRatings()
@@ -43,6 +43,20 @@ export default function MovieCard({ media, size = 'md', fill = false, getPath })
         />
 
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent opacity-70 transition-opacity group-hover:opacity-100" />
+
+        {progress?.current > 0 && progress?.total > 0 && Math.ceil((progress.total - progress.current) / 60) >= 1 && (
+          <div className="pointer-events-none absolute bottom-2.5 right-2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-bold text-white/90 backdrop-blur">
+            {Math.ceil((progress.total - progress.current) / 60)}m left
+          </div>
+        )}
+        {progress?.current > 0 && progress?.total > 0 && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1 w-full overflow-hidden bg-black/55">
+            <div
+              className="h-full rounded-r-full bg-brand"
+              style={{ width: `${Math.max(2, Math.min(100, (progress.current / progress.total) * 100))}%` }}
+            />
+          </div>
+        )}
 
         <div
           className="absolute left-2 top-2 inline-flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur transition-all duration-300 hover:bg-brand hover:scale-110 opacity-0 group-hover:opacity-100"
