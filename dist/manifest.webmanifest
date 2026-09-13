@@ -1,0 +1,17 @@
+{
+  "name": "StreamBox — Watch Movies & TV",
+  "short_name": "StreamBox",
+  "description": "StreamBox — an attractive video streaming platform demo powered by TMDB.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

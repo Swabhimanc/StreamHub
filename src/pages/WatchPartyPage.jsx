@@ -51,7 +51,8 @@ export default function WatchPartyPage() {
         </div>
 
         <p className="mt-6 text-xs text-mist/60">
-          Powered by VidFast postMessage API. Parties expire when everyone leaves.
+          Host-driven playback sync via the VidFast postMessage API. Parties expire when everyone
+          leaves.
         </p>
       </div>
 

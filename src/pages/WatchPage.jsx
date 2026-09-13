@@ -15,7 +15,8 @@ import { useApiKey } from '../context/ApiKeyContext.jsx'
 import { useMyList } from '../context/MyListContext.jsx'
 import { useHistory } from '../context/HistoryContext.jsx'
 import { useRatings } from '../context/RatingsContext.jsx'
-import { PROVIDERS } from '../data/providers.js'
+import { PROVIDERS, buildEmbedUrl } from '../data/providers.js'
+import { usePlayerBridge } from '../hooks/usePlayerBridge.js'
 import MovieCard from '../components/MovieCard.jsx'
 import PlayerEmbed from '../components/PlayerEmbed.jsx'
 import {
@@ -38,7 +39,7 @@ export default function WatchPage() {
   const { providerId, setProvider } = useProvider()
   const { apiKey } = useApiKey()
   const { has, toggle } = useMyList()
-  const { add: addHistory } = useHistory()
+  const { add: addHistory, items: historyItems } = useHistory()
   const { get: getRating, set: setRating } = useRatings()
   const [shareLabel, setShareLabel] = useState(null)
   const initialSeason = Number(searchParams.get('s')) || 1
@@ -74,6 +75,16 @@ export default function WatchPage() {
   )
 
   const userRating = media ? getRating(media.key) : 0
+
+  const historyEntry = useMemo(
+    () => historyItems.find((m) => m.key === media?.key) || null,
+    [historyItems, media?.key]
+  )
+  const resumable =
+    !!historyEntry &&
+    historyEntry.positionSeconds >= 15 &&
+    (mediaType !== 'tv' ||
+      (historyEntry.season === season && historyEntry.episode === episode))
 
   useEffect(() => {
     setSeason(initialSeason)
@@ -193,7 +204,7 @@ export default function WatchPage() {
                 className="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3 text-sm font-black text-black transition hover:bg-cream"
               >
                 <PlayIcon className="h-5 w-5" />
-                Watch {mediaType === 'tv' ? 'Series' : 'Movie'}
+                {resumable ? 'Resume Watching' : `Watch ${mediaType === 'tv' ? 'Series' : 'Movie'}`}
               </button>
               {trailerUrl && (
                 <button
@@ -512,6 +523,82 @@ function PlayerView({
   const nextEpisode = episodes.find((e) => e.number === episode + 1)
   const hasNext = Boolean(nextEpisode)
 
+  // Playback position tracking + resume via the provider's postMessage API.
+  const playerIframeRef = useRef(null)
+  const { items: historyItems, updatePosition } = useHistory()
+  const latestHistoryRef = useRef(historyItems)
+  latestHistoryRef.current = historyItems
+  const lastWrittenRef = useRef(null)
+  const resumedForRef = useRef(null)
+  const [resumeNotice, setResumeNotice] = useState(null)
+
+  const contentPlayerUrl = useMemo(
+    () => (mode === 'content' ? buildEmbedUrl(providerId, mediaType, id, season, episode) : null),
+    [mode, providerId, mediaType, id, season, episode]
+  )
+  const bridge = usePlayerBridge({
+    iframeRef: playerIframeRef,
+    playerUrl: contentPlayerUrl,
+    active: mode === 'content',
+  })
+
+  // Resume where the user left off once the player reports telemetry.
+  useEffect(() => {
+    if (mode !== 'content' || !bridge.ready || !contentPlayerUrl) return
+    if (resumedForRef.current === contentPlayerUrl) return
+    resumedForRef.current = contentPlayerUrl
+    setResumeNotice(null)
+    const sa = mediaType === 'tv' ? season : null
+    const ep = mediaType === 'tv' ? episode : null
+    const entry = latestHistoryRef.current.find(
+      (m) => m.key === media.key && m.season === sa && m.episode === ep
+    )
+    const position = entry?.positionSeconds || 0
+    const duration = entry?.durationSeconds || 0
+    if (position < 15 || (duration > 0 && position > duration - 20)) return
+    const target = duration > 5 ? Math.min(position, duration - 5) : position
+    bridge.seek(target)
+    bridge.play()
+    setResumeNotice(target)
+    const timer = setTimeout(() => setResumeNotice(null), 6000)
+    return () => clearTimeout(timer)
+  }, [mode, bridge, bridge.ready, contentPlayerUrl, media.key, mediaType, season, episode])
+
+  // Save the current position periodically and once on leave.
+  useEffect(() => {
+    if (mode !== 'content') return
+    const sa = mediaType === 'tv' ? season : null
+    const ep = mediaType === 'tv' ? episode : null
+    const write = (force = false) => {
+      const s = bridge.getState()
+      if (s.updatedAt && s.time >= 5) {
+        if (!force && lastWrittenRef.current != null && Math.abs(s.time - lastWrittenRef.current) < 4) return
+        lastWrittenRef.current = s.time
+        updatePosition(media.key, s.time, s.duration, sa, ep)
+        return
+      }
+      // No live telemetry: mirror the provider's own progress store, which it
+      // broadcasts as MEDIA_DATA every few seconds (progress:m{tmdbId} keys for
+      // movies, progress:t{id} + show_progress.sNeN for series).
+      const store = bridge.getMediaData?.()
+      const mine = store?.[`${mediaType === 'tv' ? 't' : 'm'}${id}`]
+      const progress =
+        (mediaType === 'tv'
+          ? mine?.show_progress?.[`s${season}e${episode}`]?.progress
+          : null) ?? mine?.progress
+      const watched = Number(progress?.watched)
+      if (!Number.isFinite(watched) || watched < 5) return
+      if (lastWrittenRef.current != null && Math.abs(watched - lastWrittenRef.current) < 10) return
+      lastWrittenRef.current = watched
+      updatePosition(media.key, watched, Number(progress.duration) || 0, sa, ep)
+    }
+    const timer = setInterval(() => write(), 5000)
+    return () => {
+      clearInterval(timer)
+      write(true)
+    }
+  }, [mode, bridge, media.key, mediaType, id, season, episode, updatePosition])
+
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === 'Escape') {
@@ -567,7 +654,12 @@ function PlayerView({
           </button>
         </div>
       </div>
-      <div ref={containerRef} className="mx-auto aspect-video w-full max-w-screen-2xl bg-black">
+      <div ref={containerRef} className="relative mx-auto aspect-video w-full max-w-screen-2xl bg-black">
+        {resumeNotice != null && (
+          <div className="pointer-events-none absolute left-3 top-3 z-10 rounded-full bg-black/70 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-white backdrop-blur">
+            Resumed from {formatClock(resumeNotice)}
+          </div>
+        )}
         {mode === 'trailer' && trailerUrl ? (
           <iframe
             src={trailerUrl}
@@ -577,7 +669,7 @@ function PlayerView({
             allowFullScreen
           />
         ) : (
-          <PlayerEmbed mediaType={mediaType} id={id} season={season} episode={episode} title={media.title} />
+          <PlayerEmbed mediaType={mediaType} id={id} season={season} episode={episode} title={media.title} iframeRef={playerIframeRef} />
         )}
       </div>
 
@@ -684,6 +776,15 @@ function PageMessage({ children }) {
 function formatDuration(runtime) {
   if (!runtime) return null
   return `${runtime >= 60 ? `${Math.floor(runtime / 60)}h ` : ''}${runtime % 60}m`
+}
+
+function formatClock(seconds) {
+  const total = Math.floor(seconds)
+  const pad = (n) => String(n).padStart(2, '0')
+  const h = Math.floor(total / 3600)
+  const m = Math.floor((total % 3600) / 60)
+  const s = total % 60
+  return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`
 }
 
 function initials(name) {

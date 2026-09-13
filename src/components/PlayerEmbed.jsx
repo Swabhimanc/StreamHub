@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { buildEmbedUrl } from '../data/providers.js'
 import { useProvider } from '../context/ProviderContext.jsx'
 
-export default function PlayerEmbed({ mediaType, id, season = 1, episode = 1, title, className = '' }) {
+export default function PlayerEmbed({ mediaType, id, season = 1, episode = 1, title, className = '', iframeRef }) {
   const { providerId } = useProvider()
 
   const src = useMemo(
@@ -12,6 +12,7 @@ export default function PlayerEmbed({ mediaType, id, season = 1, episode = 1, ti
 
   return (
     <iframe
+      ref={iframeRef}
       key={src}
       src={src}
       title={title || 'Video player'}

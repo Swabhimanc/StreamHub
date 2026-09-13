@@ -25,6 +25,14 @@ Browse a real, live catalog from the **TMDB API**, discover titles through rows/
 - **Series** — season & episode dropdowns; player URL rebuilds to the exact episode.
 - **Poster zoom cards** — click a card to open a quick-info modal with trailer, or hit **Watch Now** to go straight to streaming.
 
+### 🎉 Watch Party (`/party`)
+- **Create/join rooms** with a shareable 6-char code and link.
+- **Host-driven playback sync** — the host's play/pause/seek is broadcast to every member and applied to their players via the VidFast postMessage API, with drift correction and a **Request Sync** button for late joiners. If the host's browser blocks member autoplay, members get a one-tap unlock; if a title exposes no player telemetry, the room falls back to screen share.
+- **Host migration** — if the host leaves, the next member is promoted automatically.
+- **Screen share** — WebRTC host→member broadcast with quality presets and live stream stats.
+- **Voice chat** + **text chat** + participants panel.
+- **Real-time server** — Cloudflare Worker with Durable Objects (`server/`). Set `VITE_PARTY_WS_URL` to your deployed worker (see `.env.example`), or run `npx wrangler dev` in `server/` for local development (defaults to `ws://localhost:8787`).
+
 ### 🎭 Details page (watch)
 - Title, year, match %, rating, overview.
 - **Top Cast** — horizontal scroller of headshots with actor + character names (via TMDB `/credits`).
@@ -53,9 +61,13 @@ Open **http://localhost:5173**.
 
 1. Sign up: https://www.themoviedb.org/signup
 2. Settings → API → copy your **v3 auth key**
-3. Open StreamBox Settings and save the key there.
 
-The key is stored only in that browser's local storage and sent directly to TMDB. It is never included in the production bundle. Real posters, rows, genres, search, trailers and cast data now come from TMDB.
+Two ways to use it:
+
+- **Build-time (recommended for a private deploy)** — set `VITE_TMDB_API_KEY` in `.env` before `npm run build`; every visitor gets the live catalog with no setup. The key is shipped inside the bundle, so deploy it where you're comfortable exposing a read-only TMDB key.
+- **Per-browser** — open StreamBox Settings and save the key there. Stored in that browser's localStorage; overrides the build-time key.
+
+Either way, the key is sent directly from the browser to TMDB. With no key at all, the app runs on the built-in demo catalog (mock data, no live genres/trailers/cast).
 
 ---
 
@@ -70,6 +82,10 @@ The key is stored only in that browser's local storage and sent directly to TMDB
 | `/search` | Debounced live search |
 | `/mylist` | Saved titles (localStorage) |
 | `/watch/:type/:id` | **Streaming player** (+ provider/season/episode controls + cast) |
+| `/party` | Watch party lobby (create / join) |
+| `/party/:code` | Watch party room (player sync, chat, voice, screen share) |
+| `/history` | Watch history (resume where you left off) |
+| `/settings` | TMDB API key management |
 
 ---
 
@@ -142,7 +158,7 @@ npm run lint      # oxlint
 
 ## 📦 Deploy
 
-It's a static SPA — any static host works (Vercel/Netlify/GitHub Pages). Build with `npm run build` and serve `dist/`. Users add their own TMDB API key in Settings; do not configure a build-time API key. For client-side routes to work on refresh, add an SPA fallback (serve `index.html` for unknown paths).
+It's a static SPA — any static host works (Vercel/Netlify/GitHub Pages). Set `VITE_TMDB_API_KEY` (and `VITE_PARTY_WS_URL` for watch parties) in your host's environment, build with `npm run build` and serve `dist/`. Without keys, visitors can add their own TMDB key in Settings and the app falls back to the demo catalog otherwise. For client-side routes to work on refresh, add an SPA fallback (serve `index.html` for unknown paths).
 
 ---
 

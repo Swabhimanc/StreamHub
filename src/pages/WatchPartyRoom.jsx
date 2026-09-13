@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { PartySyncProvider, usePartySync } from '../context/PartySyncContext.jsx'
 import { useWebRTCHost, useWebRTCViewer } from '../hooks/useWebRTCShare.js'
 import { useVoiceChat } from '../hooks/useVoiceChat.js'
+import { usePartyPlaybackSync } from '../hooks/usePartyPlaybackSync.js'
 import { buildEmbedUrl } from '../data/providers.js'
 import PartyDock from '../components/PartyDock.jsx'
 import ChatPanel from '../components/ChatPanel.jsx'
@@ -49,6 +50,9 @@ function PartyRoomContent() {
     isHost,
     error,
     syncRequested,
+    syncRequestId,
+    lastEvent,
+    sendPartyEvent,
     shareActive,
     requestSync,
     setRoomMedia,
@@ -158,6 +162,18 @@ function PartyRoomContent() {
       ? buildEmbedUrl('vidfast', partyMedia.mediaType, partyMedia.mediaId, partyMedia.season, partyMedia.episode)
       : null
 
+  const iframeRef = useRef(null)
+  const playback = usePartyPlaybackSync({
+    iframeRef,
+    playerUrl,
+    connected,
+    isHost,
+    active: !shareActive,
+    lastEvent,
+    sendPartyEvent,
+    syncRequestId,
+  })
+
   if (!connected && !reconnecting && !partyMedia) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-ink text-mist">
@@ -249,13 +265,17 @@ function PartyRoomContent() {
               )
             ) : playerUrl ? (
               <iframe
+                ref={iframeRef}
                 key={playerUrl}
                 src={playerUrl}
                 title={partyMedia?.title || 'Party player'}
                 className="h-full w-full border-0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
-                style={{ pointerEvents: isHost ? 'auto' : 'none' }}
+                style={{
+                  pointerEvents:
+                    isHost || playback.status === 'blocked' ? 'auto' : 'none',
+                }}
               />
             ) : (
               <div className="flex h-full flex-col items-center justify-center gap-3 text-mist">
@@ -277,9 +297,21 @@ function PartyRoomContent() {
             )}
 
             {!isHost && !shareActive && (
-              <div className="pointer-events-none absolute inset-0 z-10 flex items-end justify-center pb-4">
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex justify-center p-4">
                 <div className="rounded-full bg-black/60 px-4 py-1.5 text-[10px] font-black uppercase tracking-wider text-mist backdrop-blur">
-                  Host controls playback
+                  {playback.status === 'blocked' && (
+                    <span className="text-amber-400">Tap play once — sync takes over</span>
+                  )}
+                  {playback.status === 'unavailable' && (
+                    <span>Sync unavailable — host can screen-share instead</span>
+                  )}
+                  {playback.status === 'syncing' && <span>Syncing with host…</span>}
+                  {playback.status === 'synced' && (
+                    <span className="text-emerald-400">In sync · host controls playback</span>
+                  )}
+                  {(playback.status === 'idle' || playback.status === 'host') && (
+                    <span>Host controls playback</span>
+                  )}
                 </div>
               </div>
             )}
