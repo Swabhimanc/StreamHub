@@ -58,7 +58,14 @@ export async function validateTmdbApiKey(value) {
 }
 
 export const api = {
-  list: (path, params) => request(path, params).then((r) => r.results || []),
+  // Unrated titles (vote_average 0) have no provider streams — drop them
+  // from browse surfaces. Search opts in via includeUnrated.
+  list: (path, params, { includeUnrated = false } = {}) =>
+    request(path, params).then((r) =>
+      includeUnrated
+        ? r.results || []
+        : (r.results || []).filter((item) => (item.vote_average || 0) > 0)
+    ),
   genres: () =>
     Promise.all([request(requests.genresMovie), request(requests.genresTv)]).then(
       ([movieGenres, tvGenres]) => {

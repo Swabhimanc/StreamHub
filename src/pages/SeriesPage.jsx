@@ -1,6 +1,14 @@
 import TypePage from './TypePage.jsx'
-import { SERIES_ROW_SOURCES } from '../api/dataService.js'
+import { getSeriesRowSources } from '../api/dataService.js'
+import { usePreferences } from '../context/PreferencesContext.jsx'
 
 export default function SeriesPage() {
-  return <TypePage mediaType="tv" sources={SERIES_ROW_SOURCES} label="Featured Series" />
+  const { country } = usePreferences()
+  return (
+    <TypePage
+      mediaType="tv"
+      sources={getSeriesRowSources(country)}
+      label="Featured Series"
+    />
+  )
 }

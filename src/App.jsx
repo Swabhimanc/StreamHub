@@ -5,6 +5,7 @@ import { HistoryProvider } from './context/HistoryContext.jsx'
 import { RatingsProvider } from './context/RatingsContext.jsx'
 import { PlayerProvider } from './context/PlayerContext.jsx'
 import { ProviderProvider } from './context/ProviderContext.jsx'
+import { PreferencesProvider } from './context/PreferencesContext.jsx'
 import Navbar from './components/Navbar.jsx'
 import Footer from './components/Footer.jsx'
 import VideoModal from './components/VideoModal.jsx'
@@ -25,6 +26,7 @@ export default function App() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <ApiKeyProvider>
+        <PreferencesProvider>
         <MyListProvider>
           <HistoryProvider>
           <RatingsProvider>
@@ -57,6 +59,7 @@ export default function App() {
           </RatingsProvider>
           </HistoryProvider>
         </MyListProvider>
+        </PreferencesProvider>
       </ApiKeyProvider>
     </BrowserRouter>
   )
