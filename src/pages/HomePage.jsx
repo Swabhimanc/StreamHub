@@ -89,9 +89,9 @@ function HistoryCard({ entry }) {
 
 function watchPath(entry) {
   if (entry.mediaType === 'tv' && entry.season) {
-    return `/watch/${entry.mediaType}/${entry.id}?s=${entry.season}&e=${entry.episode ?? 1}&autoplay=true`
+    return `/watch/${entry.mediaType}/${entry.id}?s=${entry.season}&e=${entry.episode ?? 1}`
   }
-  return `/watch/${entry.mediaType}/${entry.id}?autoplay=true`
+  return `/watch/${entry.mediaType}/${entry.id}`
 }
 
 function BecauseYouWatchedRow({ historyItems }) {

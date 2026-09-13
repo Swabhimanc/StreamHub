@@ -69,9 +69,9 @@ function HistoryCard({ entry, onRemove }) {
 
   const goWatch = () => {
     if (entry.mediaType === 'tv' && entry.season) {
-      navigate(`/watch/${entry.mediaType}/${entry.id}?s=${entry.season}&e=${entry.episode ?? 1}&autoplay=true`)
+      navigate(`/watch/${entry.mediaType}/${entry.id}?s=${entry.season}&e=${entry.episode ?? 1}`)
     } else {
-      navigate(`/watch/${entry.mediaType}/${entry.id}?autoplay=true`)
+      navigate(`/watch/${entry.mediaType}/${entry.id}`)
     }
   }
 
